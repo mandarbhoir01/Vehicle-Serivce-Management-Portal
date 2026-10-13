@@ -1,0 +1,13 @@
+{
+  "projects": {},
+  "targets": {
+    "vehicle-management-demoproject": {
+      "hosting": {
+        "mgm": [
+          "mgm-automotive"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}

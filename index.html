@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#151713" />
+  <meta name="description" content="MGM Automotive: careful car and bike servicing, diagnostics, upgrades, and custom work. Built for the ride ahead." />
+  <title>MGM Automotive | Built for the ride</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="landing.css" />
+  <link rel="stylesheet" href="forms.css" />
+  <link rel="stylesheet" href="auth.css" />
+</head>
+<body>
+  <main id="public-site" class="site-shell">
+    <header class="site-header">
+      <a class="site-brand" href="#home" aria-label="MGM Automotive home"><span class="site-brand-mark">MGM</span><span class="site-brand-type"><strong>MGM</strong><small>AUTOMOTIVE</small></span></a>
+      <nav class="site-nav" id="site-nav" aria-label="Website navigation">
+        <a href="#home">Home</a><a href="#services">Services</a><a href="#reviews">Reviews</a><a href="#book">Book service</a><button class="nav-link" data-open-portal="customer">My garage</button>
+      </nav>
+      <div class="site-actions"><button class="site-login" data-open-login>Log in</button><button class="site-cta" data-open-booking>Book a visit <span>↗</span></button></div>
+      <button class="mobile-menu-button" id="mobile-menu-button" aria-label="Open navigation" aria-expanded="false" aria-controls="site-nav"><span></span><span></span></button>
+    </header>
+
+    <section class="hero" id="home">
+      <div class="hero-copy">
+        <p class="hero-eyebrow"><span class="live-dot"></span> BIKE / CAR / PERFORMANCE</p>
+        <h1>MGM<br />AUTOMOTIVE<span class="hero-period">.</span></h1>
+        <p class="hero-lede">Thoughtful servicing. Proper diagnostics. Work that respects the machine.</p>
+        <div class="hero-actions"><button class="hero-primary" data-open-booking>Book your service <span>↗</span></button><a class="hero-secondary" href="#services">Explore the workshop <span>↓</span></a></div>
+        <div class="hero-footnote"><span>01 — BUILT FOR EVERY MILE</span><span>INDEPENDENT VEHICLE CARE</span></div>
+      </div>
+      <div class="hero-visual"><img class="hero-photo" src="https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&amp;fit=crop&amp;w=1800&amp;q=85" alt="Motorcycle ready for a ride" fetchpriority="high" /><div class="image-label"><span>SHOP FLOOR / 001</span><span>THE MACHINES MATTER</span></div><span class="image-index">MG—01</span></div>
+      <span class="hero-side-label">SERVICE · DETAIL · PERFORMANCE</span>
+    </section>
+
+    <div class="marquee" aria-label="Vehicle care, without the guesswork"><div class="marquee-track"><span>CARE THAT GOES FURTHER</span><i>✳</i><span>BUILT FOR THE LONG RUN</span><i>✳</i><span>BIKE / CAR / CUSTOM</span><i>✳</i><span>CARE THAT GOES FURTHER</span><i>✳</i><span>BUILT FOR THE LONG RUN</span><i>✳</i><span>BIKE / CAR / CUSTOM</span><i>✳</i></div></div>
+
+    <section class="section services-section" id="services">
+      <div class="section-heading reveal"><div><p class="section-label">01 / WHAT WE DO</p><h2>GOOD MACHINES.<br /><span>BETTER CARE.</span></h2></div><p class="section-intro">From the everyday check-up to the upgrade you've been planning, every job starts with listening.</p></div>
+      <div class="service-grid">
+        <button class="service-card reveal" data-book-service="Routine service"><img class="service-card-photo" src="https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&amp;fit=crop&amp;w=900&amp;q=80" alt="" loading="lazy" /><span class="service-meta"><span>01</span><span>↗</span></span><span class="service-glyph">01</span><strong>Bike servicing</strong><p>Routine maintenance, repairs, and road-ready checks for two wheels.</p><span class="service-link">BOOK A SERVICE <b>↗</b></span></button>
+        <button class="service-card reveal" data-book-service="Routine service"><img class="service-card-photo" src="https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&amp;fit=crop&amp;w=900&amp;q=80" alt="" loading="lazy" /><span class="service-meta"><span>02</span><span>↗</span></span><span class="service-glyph">02</span><strong>Car servicing</strong><p>Scheduled care, honest inspections, and repairs for the miles ahead.</p><span class="service-link">BOOK A SERVICE <b>↗</b></span></button>
+        <button class="service-card reveal" data-book-service="Repair"><img class="service-card-photo" src="https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?auto=format&amp;fit=crop&amp;w=900&amp;q=80" alt="" loading="lazy" /><span class="service-meta"><span>03</span><span>↗</span></span><span class="service-glyph">03</span><strong>Diagnostics &amp; repairs</strong><p>Find the fault first. Explain the fix clearly. Get you moving again.</p><span class="service-link">TELL US WHAT'S UP <b>↗</b></span></button>
+        <button class="service-card reveal" data-book-service="Modification"><img class="service-card-photo" src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&amp;fit=crop&amp;w=900&amp;q=80" alt="" loading="lazy" /><span class="service-meta"><span>04</span><span>↗</span></span><span class="service-glyph">04</span><strong>Performance upgrades</strong><p>Considered upgrades, carefully fitted and set up for your machine.</p><span class="service-link">PLAN AN UPGRADE <b>↗</b></span></button>
+        <button class="service-card reveal" data-book-service="Modification"><img class="service-card-photo" src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&amp;fit=crop&amp;w=900&amp;q=80" alt="" loading="lazy" /><span class="service-meta"><span>05</span><span>↗</span></span><span class="service-glyph">05</span><strong>Custom modifications</strong><p>Thoughtful custom work shaped around how you ride and drive.</p><span class="service-link">START A CONVERSATION <b>↗</b></span></button>
+        <button class="service-card reveal" data-book-service="Inspection"><img class="service-card-photo" src="https://images.unsplash.com/photo-1607860108855-64acf2078ed9?auto=format&amp;fit=crop&amp;w=900&amp;q=80" alt="" loading="lazy" /><span class="service-meta"><span>06</span><span>↗</span></span><span class="service-glyph">06</span><strong>Detail &amp; protection</strong><p>Careful finish correction and protection that stands up to the road.</p><span class="service-link">BOOK AN INSPECTION <b>↗</b></span></button>
+      </div>
+    </section>
+
+    <section class="method-section">
+      <div class="method-image reveal"><img src="https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?auto=format&amp;fit=crop&amp;w=1200&amp;q=85" alt="Mechanic inspecting an engine in the workshop" loading="lazy" /><span class="method-image-tag">THE WORK IS IN THE DETAILS</span></div>
+      <div class="method-copy reveal"><p class="section-label">02 / OUR APPROACH</p><h2>NO GUESSWORK.<br /><span>NO SHORTCUTS.</span></h2><p>We take the time to understand the machine, the symptom, and the way you use it. Then we show you what we found and agree on the work before we start.</p><div class="method-points"><div><span>01</span><strong>Clear conversations</strong></div><div><span>02</span><strong>Work you can follow</strong></div><div><span>03</span><strong>A history that stays yours</strong></div></div><button class="text-action" data-open-portal="customer">See your service history <span>↗</span></button></div>
+    </section>
+
+    <section class="reviews-section section" id="reviews">
+      <div class="section-heading reveal"><div><p class="section-label">03 / FROM THE COMMUNITY</p><h2>GOOD WORDS.<br /><span>REAL RIDERS.</span></h2></div><p class="section-intro">The best kind of review comes from someone whose machine is back where it belongs.</p></div>
+      <div class="review-grid">
+        <article class="review-card reveal"><div class="review-stars" aria-label="5 out of 5 stars">★★★★★</div><blockquote>“They explained what my bike needed before touching anything. It rides beautifully now.”</blockquote><div class="review-by"><span class="review-avatar">RK</span><span><strong>Rahul K.</strong><small>Hunter 350 · Service visit</small></span><span class="review-mark">01</span></div></article>
+        <article class="review-card reveal"><div class="review-stars" aria-label="5 out of 5 stars">★★★★★</div><blockquote>“Quick diagnosis, clear quote, and no surprise add-ons. Exactly how a garage should work.”</blockquote><div class="review-by"><span class="review-avatar avatar-orange">SM</span><span><strong>Shreya M.</strong><small>Honda City · Repair</small></span><span class="review-mark">02</span></div></article>
+        <article class="review-card reveal"><div class="review-stars" aria-label="5 out of 5 stars">★★★★★</div><blockquote>“The custom work came out better than the idea in my head. Great people to work with.”</blockquote><div class="review-by"><span class="review-avatar avatar-blue">AP</span><span><strong>Arjun P.</strong><small>Classic 350 · Custom work</small></span><span class="review-mark">03</span></div></article>
+      </div>
+    </section>
+
+    <section class="booking-section" id="book"><div class="booking-inner reveal"><div><p class="section-label">04 / MAKE IT HAPPEN</p><h2>YOUR MACHINE'S<br />NEXT CHAPTER<span>.</span></h2></div><div class="booking-copy"><p>Tell us what you're riding and what it needs. We'll take it from there.</p><button class="hero-primary" data-open-booking>Book an appointment <span>↗</span></button><small>Bike or car · service, repair, or custom work</small></div></div></section>
+
+    <footer class="site-footer"><a class="site-brand" href="#home"><span class="site-brand-mark">MGM</span><span class="site-brand-type"><strong>MGM</strong><small>AUTOMOTIVE</small></span></a><span>CARE FOR THE MACHINE. RESPECT FOR THE ROAD.</span><div><button data-open-portal="customer">My garage</button><button data-open-login="admin">Admin login</button></div><span class="footer-copy">© 2026 MGM AUTOMOTIVE · DEMO EXPERIENCE</span></footer>
+  </main>
+
+  <div class="auth-backdrop hidden" id="auth-backdrop" role="presentation"><section class="auth-modal" role="dialog" aria-modal="true" aria-labelledby="auth-title"><button class="auth-close" id="close-auth" aria-label="Close login">×</button><p class="section-label">MGM AUTOMOTIVE / SIGN IN</p><h2 id="auth-title">ADMIN LOGIN</h2><div class="auth-role-tabs"><button class="auth-tab active" data-auth-role="admin">Admin</button><button class="auth-tab" data-auth-role="customer">Customer</button></div><form id="auth-form"><label id="auth-name-label">Admin name<input id="auth-name" value="Mandar" autocomplete="username" required /></label><label>Demo password<input id="auth-password" type="password" value="garage-demo" autocomplete="current-password" required /></label><p class="auth-hint">Demo access only. This prototype does not authenticate accounts or store passwords.</p><p class="auth-error hidden" id="auth-error">Enter the admin name “Mandar” to open this demo workspace.</p><button class="hero-primary auth-submit" type="submit">Open admin workspace <span>↗</span></button></form><div class="customer-auth-panel hidden" id="customer-auth-panel"><button class="google-signin" id="google-signin" type="button"><span class="google-mark">G</span>Continue with Google</button><div class="auth-divider"><span>OR USE YOUR PHONE</span></div><form id="phone-form"><label>Mobile number <small>Include country code, e.g. +91</small><input id="phone-number" type="tel" autocomplete="tel" placeholder="+91 98765 43210" required /></label><div id="recaptcha-container"></div><button class="hero-primary auth-submit" type="submit">Send one-time code <span>↗</span></button></form><form id="otp-form" class="hidden"><label>Verification code<input id="otp-code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" placeholder="6-digit SMS code" required /></label><button class="hero-primary auth-submit" type="submit">Verify and continue <span>↗</span></button><button class="change-number" id="change-number" type="button">Use a different number</button></form><p class="auth-status" id="customer-auth-status" role="status" aria-live="polite">Connect Firebase to enable Google sign-in and SMS codes.</p><button class="customer-entry" id="customer-entry" type="button">Continue as demo customer <span>↗</span></button></div></section></div>
+
+  <div id="portal-app" class="app-shell hidden">
+    <aside class="sidebar" aria-label="Main navigation">
+      <a class="brand" href="#overview"><span class="brand-mark">MGM</span><span>MGM<span class="brand-light">automotive</span></span></a>
+      <div class="workspace-label">WORKSPACE</div>
+      <nav class="nav-list">
+        <button class="nav-item active" data-view="overview"><span class="nav-icon">▦</span>Overview</button>
+        <button class="nav-item" data-view="requests"><span class="nav-icon">◷</span>Service requests<span class="nav-count" id="request-count">0</span></button>
+        <button class="nav-item" data-view="vehicles"><span class="nav-icon">⌑</span>My vehicles</button>
+        <button class="nav-item" data-view="records"><span class="nav-icon">▤</span>Service records</button>
+        <button class="nav-item" data-view="payments"><span class="nav-icon">＄</span>Payments</button>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="help-panel"><span class="help-dot"></span><div><strong>Need a hand?</strong><span>Our service team is here.</span></div><a href="mailto:service@mandargarage.demo" aria-label="Email service team">↗</a></div>
+        <button class="profile-button"><span class="avatar" id="profile-avatar">AP</span><span class="profile-copy"><strong id="profile-name">Aarav Patel</strong><small id="profile-role">Customer account</small></span><span class="profile-menu">···</span></button>
+      </div>
+    </aside>
+    <main class="main-content">
+      <header class="topbar">
+        <div class="breadcrumb"><button class="back-to-site" id="back-to-site">← MGM Automotive</button><b>/</b><strong id="breadcrumb-current">Overview</strong></div>
+        <div class="topbar-actions">
+          <div class="role-switch" aria-label="Switch demo account"><button class="role-option active" data-role="customer">Customer</button><button class="role-option" data-role="admin">Admin</button></div>
+          <span class="topbar-divider"></span><button class="icon-button notification-button" aria-label="Notifications">♧<i></i></button><button class="top-avatar" id="top-avatar">AP</button>
+        </div>
+      </header>
+      <div class="page-wrap">
+        <section class="welcome-row">
+          <div><div class="eyebrow"><span class="eyebrow-line"></span><span id="welcome-eyebrow">CUSTOMER PORTAL</span></div><h1 id="page-title">Good morning, Aarav<span class="title-period">.</span></h1><p class="page-subtitle" id="page-subtitle">Your vehicles, service visits, and payments in one place.</p></div>
+          <button class="button button-primary" id="new-request-button"><span class="button-plus">+</span> New service request</button>
+        </section>
+        <section class="stats-grid" id="stats-grid" aria-label="Service summary"></section>
+        <section class="content-grid">
+          <div class="main-column">
+            <section class="panel schedule-panel"><div class="panel-heading"><div><div class="section-kicker">UP NEXT</div><h2 id="schedule-heading">Upcoming service</h2></div><button class="text-button" data-open-view="requests">View all <span>↗</span></button></div><div id="upcoming-service"></div></section>
+            <section class="panel requests-panel"><div class="panel-heading"><div><div class="section-kicker">KEEP AN EYE ON IT</div><h2 id="recent-heading">Recent requests</h2></div><button class="text-button" data-open-view="requests">All requests <span>↗</span></button></div><div class="table-wrap"><table><thead><tr><th>REQUEST</th><th>VEHICLE</th><th>DATE</th><th>STATUS</th></tr></thead><tbody id="recent-requests"></tbody></table></div></section>
+            <section class="panel view-panel hidden" id="full-view-panel"><div class="panel-heading"><div><div class="section-kicker" id="full-view-kicker">YOUR GARAGE</div><h2 id="full-view-title"></h2></div><button class="button button-small button-primary hidden" id="view-action-button"></button></div><div id="full-view-content"></div></section>
+          </div>
+          <aside class="right-column">
+            <section class="panel garage-panel"><div class="panel-heading compact-heading"><div><div class="section-kicker">YOUR GARAGE</div><h2>Vehicles</h2></div><button class="icon-button add-vehicle-button" id="add-vehicle-button" aria-label="Add a vehicle" title="Add a vehicle">+</button></div><div class="vehicle-list" id="vehicle-list"></div><button class="garage-footer" data-open-view="vehicles">Manage vehicles <span>↗</span></button></section>
+            <section class="panel payment-panel"><div class="panel-heading compact-heading"><div><div class="section-kicker">BILLING</div><h2>Payments</h2></div><button class="text-button" data-open-view="payments">All <span>↗</span></button></div><div class="payment-summary" id="payment-summary"></div><div class="payment-list" id="payment-list"></div></section>
+            <section class="service-note"><span class="note-spark">✳</span><div><strong>Good to know</strong><p>Every service comes with a digital record, so your vehicle's history stays with you.</p></div></section>
+          </aside>
+        </section>
+        <footer class="page-footer"><span>MGM Automotive <span class="footer-dot">·</span> Vehicle care, in good hands.</span><span>DEMO WORKSPACE <span class="status-light"></span></span></footer>
+      </div>
+    </main>
+  </div>
+  </div>
+  <div class="modal-backdrop hidden" id="modal-backdrop" role="presentation"><section class="modal request-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div class="modal-heading"><div><div class="section-kicker">SERVICE DESK / NEW BOOKING</div><h2 id="modal-title">Tell us what it needs.</h2><p class="form-intro">Share a few details and the team will confirm your visit.</p></div><button class="icon-button" id="close-modal" aria-label="Close dialog">×</button></div><form id="request-form"><label>Vehicle<select id="request-vehicle" required></select></label><label>Service needed<select id="request-type" required><option value="Routine service">Routine service</option><option value="Repair">Repair / diagnostics</option><option value="Modification">Modification / upgrade</option><option value="Inspection">Inspection</option><option value="Tyres &amp; wheels">Tyres &amp; wheels</option></select></label><div class="form-row"><label>Preferred date<input id="request-date" type="date" required /></label><label>Preferred time<select id="request-time" required><option value="09:00–11:00">09:00–11:00</option><option value="11:00–13:00">11:00–13:00</option><option value="14:00–16:00">14:00–16:00</option><option value="16:00–18:00">16:00–18:00</option></select></label></div><label>Mobile / WhatsApp <span class="optional-label">OPTIONAL</span><input id="request-contact" type="tel" autocomplete="tel" placeholder="Your contact number" /></label><label>Describe the work<textarea id="request-notes" rows="4" minlength="8" placeholder="What are you noticing? Include any symptoms, sounds, or changes..." required></textarea></label><label class="pickup-toggle"><input id="request-pickup" type="checkbox" /><span class="checkmark"></span><span>I'd like to ask about vehicle pickup</span></label><div class="modal-actions"><button type="button" class="button button-quiet" id="cancel-modal">Cancel</button><button type="submit" class="button button-primary">Send service request <span>↗</span></button></div></form></section></div>
+  <div class="modal-backdrop vehicle-backdrop hidden" id="vehicle-modal-backdrop" role="presentation"><section class="modal vehicle-modal" role="dialog" aria-modal="true" aria-labelledby="vehicle-modal-title"><div class="modal-heading"><div><div class="section-kicker">YOUR GARAGE / ADD VEHICLE</div><h2 id="vehicle-modal-title">Which machine?</h2><p class="form-intro">Choose the make, then add a few details.</p></div><button class="icon-button" id="close-vehicle-modal" aria-label="Close dialog">×</button></div><form id="vehicle-form"><div class="vehicle-type-control" role="group" aria-label="Vehicle type"><button type="button" class="vehicle-type-option selected" data-vehicle-type="Car">Car</button><button type="button" class="vehicle-type-option" data-vehicle-type="Bike">Bike / scooter</button></div><label>Find your make<input id="vehicle-make-search" type="search" placeholder="Search car or bike brands..." autocomplete="off" /></label><div class="brand-picker" id="brand-picker" role="listbox" aria-label="Choose vehicle make"></div><label class="custom-make-field hidden" id="custom-make-field">Your vehicle make<input id="vehicle-custom-make" placeholder="Enter make" /></label><div class="form-row"><label>Model<input id="vehicle-model" placeholder="e.g. City ZX" required /></label><label>Year<input id="vehicle-year" type="number" min="1950" required /></label></div><label>Registration number<input id="vehicle-plate" placeholder="e.g. MH 02 AB 1234" required /></label><label>Odometer <span class="optional-label">OPTIONAL</span><div class="unit-input"><input id="vehicle-mileage" type="number" min="0" placeholder="Current reading" /><span>km</span></div></label><div class="modal-actions"><button type="button" class="button button-quiet" id="cancel-vehicle-modal">Cancel</button><button type="submit" class="button button-primary">Add to my garage <span>↗</span></button></div></form></section></div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="firebase-config.js"></script>
+  <script src="app.js"></script>
+  <script src="site.js"></script>
+  <script type="module" src="firebase-auth.js"></script>
+</body>
+</html>

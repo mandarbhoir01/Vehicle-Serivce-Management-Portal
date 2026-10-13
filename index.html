@@ -14,6 +14,7 @@
   <link rel="stylesheet" href="about.css" />
   <link rel="stylesheet" href="account.css" />
   <link rel="stylesheet" href="forms.css" />
+  <link rel="stylesheet" href="review.css" />
   <link rel="stylesheet" href="auth.css" />
 </head>
 <body>
@@ -66,7 +67,7 @@
 
     <section class="reviews-section section" id="reviews">
       <div class="section-heading reveal"><div><p class="section-label">03 / FROM THE COMMUNITY</p><h2>GOOD WORDS.<br /><span>REAL RIDERS.</span></h2></div><p class="section-intro">The best kind of review comes from someone whose machine is back where it belongs.</p></div>
-      <div class="review-grid">
+      <div class="review-grid" id="public-review-list">
         <article class="review-card reveal"><div class="review-stars" aria-label="5 out of 5 stars">★★★★★</div><blockquote>“They explained what my bike needed before touching anything. It rides beautifully now.”</blockquote><div class="review-by"><span class="review-avatar">RK</span><span><strong>Rahul K.</strong><small>Hunter 350 · Service visit</small></span><span class="review-mark">01</span></div></article>
         <article class="review-card reveal"><div class="review-stars" aria-label="5 out of 5 stars">★★★★★</div><blockquote>“Quick diagnosis, clear quote, and no surprise add-ons. Exactly how a garage should work.”</blockquote><div class="review-by"><span class="review-avatar avatar-orange">SM</span><span><strong>Shreya M.</strong><small>Honda City · Repair</small></span><span class="review-mark">02</span></div></article>
         <article class="review-card reveal"><div class="review-stars" aria-label="5 out of 5 stars">★★★★★</div><blockquote>“The custom work came out better than the idea in my head. Great people to work with.”</blockquote><div class="review-by"><span class="review-avatar avatar-blue">AP</span><span><strong>Arjun P.</strong><small>Classic 350 · Custom work</small></span><span class="review-mark">03</span></div></article>
@@ -115,6 +116,7 @@
             <section class="panel schedule-panel"><div class="panel-heading"><div><div class="section-kicker">UP NEXT</div><h2 id="schedule-heading">Upcoming service</h2></div><button class="text-button" data-open-view="requests">View all <span>↗</span></button></div><div id="upcoming-service"></div></section>
             <section class="panel requests-panel"><div class="panel-heading"><div><div class="section-kicker">KEEP AN EYE ON IT</div><h2 id="recent-heading">Recent requests</h2></div><button class="text-button" data-open-view="requests">All requests <span>↗</span></button></div><div class="table-wrap"><table><thead><tr><th>REQUEST</th><th>VEHICLE</th><th>DATE</th><th>STATUS</th></tr></thead><tbody id="recent-requests"></tbody></table></div></section>
             <section class="panel view-panel hidden" id="full-view-panel"><div class="panel-heading"><div><div class="section-kicker" id="full-view-kicker">YOUR GARAGE</div><h2 id="full-view-title"></h2></div><button class="button button-small button-primary hidden" id="view-action-button"></button></div><div id="full-view-content"></div></section>
+            <section class="panel review-submit-panel hidden" id="review-submit-panel"><div class="panel-heading"><div><div class="section-kicker">YOUR EXPERIENCE</div><h2>Leave a review</h2><p class="review-form-intro">Your feedback will appear on the MGM Automotive homepage.</p></div></div><form id="review-form"><label>Rating<select id="review-rating" required><option value="5">★★★★★ · Excellent</option><option value="4">★★★★☆ · Great</option><option value="3">★★★☆☆ · Good</option><option value="2">★★☆☆☆ · Fair</option><option value="1">★☆☆☆☆ · Needs work</option></select></label><label>Vehicle <span class="review-optional">OPTIONAL</span><select id="review-vehicle"></select></label><label>Your review<textarea id="review-message" rows="4" minlength="12" maxlength="600" placeholder="What went well? What should other drivers know?" required></textarea></label><div class="review-form-footer"><span>12–600 characters</span><button class="button button-primary" type="submit">Publish review <span>↗</span></button></div></form></section>
           </div>
           <aside class="right-column">
             <section class="panel garage-panel"><div class="panel-heading compact-heading"><div><div class="section-kicker">YOUR GARAGE</div><h2>Vehicles</h2></div><button class="icon-button add-vehicle-button" id="add-vehicle-button" aria-label="Add a vehicle" title="Add a vehicle">+</button></div><div class="vehicle-list" id="vehicle-list"></div><button class="garage-footer" data-open-view="vehicles">Manage vehicles <span>↗</span></button></section>

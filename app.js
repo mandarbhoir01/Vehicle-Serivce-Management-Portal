@@ -1,5 +1,6 @@
 const STORAGE_KEY = "motordesk-demo-v1";
 const PROFILE_STORAGE_PREFIX = "mgm-profile-v1";
+const PUBLIC_REVIEWS_KEY = "mgm-public-reviews-v1";
 const currentUser = { id: "aarav", name: "Aarav Patel", initials: "AP" };
 const starterData = {
   vehicles: [
@@ -121,6 +122,33 @@ function payments() { return data.payments.filter((item) => role === "admin" || 
 function statusClass(status) { return `status-${status.toLowerCase().replaceAll(" ", "-")}`; }
 function pill(status) { return `<span class="status-pill ${statusClass(status)}">${esc(status)}</span>`; }
 
+function submittedReviews() {
+  try {
+    const reviews = JSON.parse(localStorage.getItem(PUBLIC_REVIEWS_KEY));
+    return Array.isArray(reviews) ? reviews : [];
+  } catch {
+    return [];
+  }
+}
+
+function renderPublicReviews() {
+  const container = document.querySelector("#public-review-list");
+  if (!container) return;
+  container.querySelectorAll("[data-user-review]").forEach((review) => review.remove());
+  submittedReviews().slice().reverse().forEach((review) => {
+    const rating = Math.max(1, Math.min(5, Number(review.rating) || 5));
+    const stars = `${"★".repeat(rating)}${"☆".repeat(5 - rating)}`;
+    const vehicle = review.vehicle ? `<small>${esc(review.vehicle)} · Customer review</small>` : "<small>Customer review</small>";
+    container.insertAdjacentHTML("afterbegin", `<article class="review-card user-review-card" data-user-review="${esc(review.owner)}"><div class="review-stars" aria-label="${rating} out of 5 stars">${stars}</div><blockquote>${esc(review.message)}</blockquote><div class="review-by"><span class="review-avatar">${esc(review.initials || "CU")}</span><span><strong>${esc(review.name || "Customer")}</strong>${vehicle}</span><span class="review-mark">${date(review.date)}</span></div></article>`);
+  });
+}
+
+function renderReviewVehicleOptions() {
+  const select = document.querySelector("#review-vehicle");
+  if (!select) return;
+  select.innerHTML = `<option value="">General workshop experience</option>${vehicles().map((vehicle) => `<option value="${esc(vehicle.id)}">${esc(vehicleName(vehicle))}</option>`).join("")}`;
+}
+
 function renderStats() {
   const open = requests().filter((item) => ["Awaiting approval", "Approved", "In progress"].includes(item.status)).length;
   const due = payments().filter((item) => item.status === "Due").reduce((sum, item) => sum + item.amount, 0);
@@ -203,6 +231,9 @@ function render() {
   document.querySelector("#recent-heading").textContent = admin ? "Latest service requests" : "Recent requests";
   document.querySelector("#add-vehicle-button").classList.toggle("hidden", admin);
   document.querySelector(".garage-footer").innerHTML = admin ? "View registered vehicles <span>↗</span>" : "Manage vehicles <span>↗</span>";
+  document.querySelector("#review-submit-panel").classList.toggle("hidden", admin);
+  renderReviewVehicleOptions();
+  renderPublicReviews();
   renderStats(); renderUpcoming(); renderRecent(); renderVehicles(); renderPayments(); renderFullView();
 }
 
@@ -336,6 +367,30 @@ document.addEventListener("click", (event) => {
   const id = event.target.dataset.removeVehicle;
   if (!id || !confirm("Remove this vehicle from your garage? Its service records will remain.")) return;
   data.vehicles = data.vehicles.filter((item) => item.id !== id); save(); render(); toast("Vehicle removed from your garage.");
+});
+
+document.querySelector("#review-form").addEventListener("submit", (event) => {
+  event.preventDefault();
+  const reviews = submittedReviews();
+  const vehicleId = document.querySelector("#review-vehicle").value;
+  const selectedVehicle = vehicleFor(vehicleId);
+  const review = {
+    owner: currentUser.id,
+    name: currentUser.name.includes("@") ? "Customer" : currentUser.name,
+    initials: currentUser.initials,
+    rating: Number(document.querySelector("#review-rating").value),
+    vehicle: selectedVehicle ? vehicleName(selectedVehicle) : "",
+    message: document.querySelector("#review-message").value.trim(),
+    date: new Date().toISOString().slice(0, 10),
+  };
+  const existingIndex = reviews.findIndex((item) => item.owner === currentUser.id);
+  if (existingIndex >= 0) reviews[existingIndex] = review;
+  else reviews.unshift(review);
+  localStorage.setItem(PUBLIC_REVIEWS_KEY, JSON.stringify(reviews));
+  document.querySelector("#review-form").reset();
+  renderReviewVehicleOptions();
+  renderPublicReviews();
+  toast(existingIndex >= 0 ? "Your review has been updated on the homepage." : "Your review has been added to the homepage.");
 });
 
 render();

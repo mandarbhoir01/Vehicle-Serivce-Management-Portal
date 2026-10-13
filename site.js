@@ -32,7 +32,7 @@ function setAccountMode(mode, user = null) {
     const name = user.displayName || user.email || "Customer";
     setCustomerProfile({ id: user.uid, name, initials: initialsFor(name) });
   } else if (mode === "demo") {
-    setCustomerProfile({ id: "aarav", name: "Aarav Patel", initials: "AP" });
+    setCustomerProfile({ id: "aarav", name: "Demo Customer", initials: "DC" });
     window.dispatchEvent(new CustomEvent("mgm-demo-selected"));
   } else if (mode === "admin") {
     Object.assign(currentUser, { id: "mandar-admin", name: "Mandar", initials: "MA" });
@@ -43,7 +43,7 @@ function setAccountMode(mode, user = null) {
   const hasAccount = ["google", "demo", "admin"].includes(mode);
   document.querySelector("#site-login").classList.toggle("hidden", hasAccount);
   siteProfile.classList.toggle("hidden", !hasAccount);
-  siteProfileName.textContent = mode === "demo" ? "Demo user" : currentUser.name;
+  siteProfileName.textContent = mode === "demo" ? "Demo customer" : currentUser.name;
   siteProfileAvatar.textContent = currentUser.initials;
   siteProfile.setAttribute("aria-label", `${siteProfileName.textContent}: open garage`);
 }
@@ -62,11 +62,12 @@ function setAuthRole(nextRole) {
   customerAuthPanel.classList.toggle("hidden", isAdmin);
   document.querySelector("#auth-title").textContent = isAdmin ? "ADMIN LOGIN" : "CUSTOMER LOGIN";
   authError.classList.add("hidden");
-  if (isAdmin) authName.focus();
-  else document.querySelector("#google-signin").focus();
   if (isAdmin) {
     authName.value = "";
     authPassword.value = "";
+    authName.focus();
+  } else {
+    document.querySelector("#google-signin").focus();
   }
 }
 

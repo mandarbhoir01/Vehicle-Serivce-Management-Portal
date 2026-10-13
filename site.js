@@ -27,22 +27,20 @@ function setAccountMode(mode, user = null) {
   authenticatedUser = mode === "google" ? user : null;
 
   if (mode === "google") {
-    currentUser.id = user.uid;
-    currentUser.name = user.displayName || user.email || "Customer";
-    currentUser.initials = initialsFor(currentUser.name);
+    const name = user.displayName || user.email || "Customer";
+    setCustomerProfile({ id: user.uid, name, initials: initialsFor(name) });
   } else if (mode === "demo") {
-    Object.assign(currentUser, { id: "aarav", name: "Aarav Patel", initials: "AP" });
+    setCustomerProfile({ id: "aarav", name: "Aarav Patel", initials: "AP" });
     window.dispatchEvent(new CustomEvent("mgm-demo-selected"));
   } else if (mode === "admin") {
     Object.assign(currentUser, { id: "mandar-admin", name: "Mandar", initials: "MA" });
   } else {
-    Object.assign(currentUser, { id: "aarav", name: "Aarav Patel", initials: "AP" });
+    setCustomerProfile({ id: "aarav", name: "Aarav Patel", initials: "AP" });
   }
 
   const hasAccount = ["google", "demo", "admin"].includes(mode);
   document.querySelector("#site-login").classList.toggle("hidden", hasAccount);
   siteProfile.classList.toggle("hidden", !hasAccount);
-  document.querySelectorAll(".garage-access").forEach((link) => link.classList.toggle("hidden", !hasAccount));
   siteProfileName.textContent = mode === "demo" ? "Demo user" : currentUser.name;
   siteProfileAvatar.textContent = currentUser.initials;
   siteProfile.setAttribute("aria-label", `${siteProfileName.textContent}: open garage`);
@@ -142,6 +140,10 @@ window.addEventListener("mgm-auth-state", (event) => {
 });
 
 document.querySelector("#back-to-site").addEventListener("click", showPublicSite);
+document.querySelector(".sidebar .brand").addEventListener("click", (event) => {
+  event.preventDefault();
+  showPublicSite();
+});
 const header = document.querySelector(".site-header");
 const menuButton = document.querySelector("#mobile-menu-button");
 menuButton.addEventListener("click", () => {

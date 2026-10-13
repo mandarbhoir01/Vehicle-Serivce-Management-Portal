@@ -1,4 +1,5 @@
 const STORAGE_KEY = "motordesk-demo-v1";
+const PROFILE_STORAGE_PREFIX = "mgm-profile-v1";
 const currentUser = { id: "aarav", name: "Aarav Patel", initials: "AP" };
 const starterData = {
   vehicles: [
@@ -27,9 +28,32 @@ const starterData = {
   ],
 };
 
-let data;
-try { data = JSON.parse(localStorage.getItem(STORAGE_KEY)) || structuredClone(starterData); }
-catch { data = structuredClone(starterData); }
+function emptyAccountData() {
+  return { vehicles: [], requests: [], payments: [], records: [] };
+}
+
+function scopeAccountData(source, userId) {
+  return {
+    vehicles: (source.vehicles || []).filter((item) => item.owner === userId),
+    requests: (source.requests || []).filter((item) => item.owner === userId),
+    payments: (source.payments || []).filter((item) => item.owner === userId),
+    records: (source.records || []).filter((item) => item.owner === userId),
+  };
+}
+
+function loadAccountData(userId) {
+  try {
+    const saved = localStorage.getItem(`${PROFILE_STORAGE_PREFIX}:${userId}`);
+    if (saved) return JSON.parse(saved);
+    const legacy = localStorage.getItem(STORAGE_KEY);
+    if (legacy) return scopeAccountData(JSON.parse(legacy), userId);
+  } catch {
+    return userId === "aarav" ? scopeAccountData(structuredClone(starterData), userId) : emptyAccountData();
+  }
+  return userId === "aarav" ? scopeAccountData(structuredClone(starterData), userId) : emptyAccountData();
+}
+
+let data = loadAccountData(currentUser.id);
 let role = "customer";
 let activeView = "overview";
 let toastTimer;
@@ -78,7 +102,14 @@ const el = {
   form: document.querySelector("#request-form"), toast: document.querySelector("#toast"),
 };
 
-function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
+function save() { localStorage.setItem(`${PROFILE_STORAGE_PREFIX}:${currentUser.id}`, JSON.stringify(data)); }
+function setCustomerProfile(profile) {
+  const nextId = String(profile.id || "customer");
+  const changed = currentUser.id !== nextId;
+  Object.assign(currentUser, { id: nextId, name: profile.name || "Customer", initials: profile.initials || "CU" });
+  if (changed) data = loadAccountData(nextId);
+  render();
+}
 function esc(value) { return String(value).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]); }
 function money(value) { return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(value); }
 function date(value, options = { day: "numeric", month: "short" }) { return value ? new Intl.DateTimeFormat("en-IN", options).format(new Date(`${value}T12:00:00`)) : "Date pending"; }

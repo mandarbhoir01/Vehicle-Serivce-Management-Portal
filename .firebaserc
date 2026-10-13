@@ -5,6 +5,9 @@
       "hosting": {
         "mgm": [
           "mgm-automotive"
+        ],
+        "default": [
+          "vehicle-management-demoproject"
         ]
       }
     }

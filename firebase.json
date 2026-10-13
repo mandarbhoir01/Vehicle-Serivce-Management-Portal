@@ -1,13 +1,26 @@
 {
-  "hosting": {
-    "target": "mgm",
-    "public": ".",
-    "ignore": [
-      "firebase.json",
-      "README.md",
-      "functions/**",
-      "**/.*",
-      "**/node_modules/**"
-    ]
-  }
+  "hosting": [
+    {
+      "target": "default",
+      "public": ".",
+      "ignore": [
+        "firebase.json",
+        "README.md",
+        "functions/**",
+        "**/.*",
+        "**/node_modules/**"
+      ]
+    },
+    {
+      "target": "mgm",
+      "public": ".",
+      "ignore": [
+        "firebase.json",
+        "README.md",
+        "functions/**",
+        "**/.*",
+        "**/node_modules/**"
+      ]
+    }
+  ]
 }

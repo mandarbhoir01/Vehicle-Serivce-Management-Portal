@@ -227,6 +227,7 @@ function render() {
   document.querySelector("#new-request-button").classList.toggle("hidden", admin);
   document.querySelectorAll(".role-option").forEach((button) => button.classList.toggle("active", button.dataset.role === role));
   document.querySelectorAll(".nav-item").forEach((button) => button.classList.toggle("active", button.dataset.view === activeView));
+  document.querySelector(".customer-review-nav").classList.toggle("hidden", admin);
   document.querySelector("#breadcrumb-current").textContent = activeView === "overview" ? "Overview" : activeView[0].toUpperCase() + activeView.slice(1);
   document.querySelector("#recent-heading").textContent = admin ? "Latest service requests" : "Recent requests";
   document.querySelector("#add-vehicle-button").classList.toggle("hidden", admin);
@@ -301,7 +302,16 @@ function openModal() {
   el.modal.classList.remove("hidden"); document.querySelector("#request-vehicle").focus();
 }
 
-function openView(view) { activeView = view; render(); document.querySelector("#full-view-panel").scrollIntoView({ behavior: "smooth", block: "start" }); }
+function openView(view) {
+  if (view === "reviews") {
+    document.querySelectorAll(".nav-item").forEach((button) => button.classList.toggle("active", button.dataset.view === "reviews"));
+    document.querySelector("#review-submit-panel").scrollIntoView({ behavior: "smooth", block: "start" });
+    return;
+  }
+  activeView = view;
+  render();
+  document.querySelector("#full-view-panel").scrollIntoView({ behavior: "smooth", block: "start" });
+}
 document.querySelectorAll(".role-option").forEach((button) => button.addEventListener("click", () => {
   const nextRole = button.dataset.role;
   if (nextRole === role) return;

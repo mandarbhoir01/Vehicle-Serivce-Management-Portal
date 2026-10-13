@@ -302,7 +302,11 @@ function openModal() {
 }
 
 function openView(view) { activeView = view; render(); document.querySelector("#full-view-panel").scrollIntoView({ behavior: "smooth", block: "start" }); }
-document.querySelectorAll(".role-option").forEach((button) => button.addEventListener("click", () => { role = button.dataset.role; activeView = "overview"; render(); }));
+document.querySelectorAll(".role-option").forEach((button) => button.addEventListener("click", () => {
+  const nextRole = button.dataset.role;
+  if (nextRole === role) return;
+  window.dispatchEvent(new CustomEvent("mgm-role-switch-request", { detail: { role: nextRole } }));
+}));
 document.querySelectorAll(".nav-item").forEach((button) => button.addEventListener("click", () => openView(button.dataset.view)));
 document.querySelectorAll("[data-open-view]").forEach((button) => button.addEventListener("click", () => openView(button.dataset.openView)));
 document.querySelector("#new-request-button").addEventListener("click", openModal);

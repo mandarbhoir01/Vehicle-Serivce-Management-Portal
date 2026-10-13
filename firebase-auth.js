@@ -50,6 +50,19 @@ async function initializeFirebaseAuth() {
         googleButton.disabled = false;
       }
     });
+    window.addEventListener("mgm-request-customer-reauth", async () => {
+      if (!auth.currentUser) {
+        window.dispatchEvent(new CustomEvent("mgm-role-switch-auth-failed"));
+        return;
+      }
+      try {
+        const result = await firebaseAuth.reauthenticateWithPopup(auth.currentUser, provider);
+        window.dispatchEvent(new CustomEvent("mgm-role-switch-success", { detail: { user: result.user } }));
+      } catch (error) {
+        showAuthError(error);
+        window.dispatchEvent(new CustomEvent("mgm-role-switch-auth-failed"));
+      }
+    });
     googleButton.disabled = false;
     authStatus.textContent = "Google sign-in is ready.";
   } catch (error) {

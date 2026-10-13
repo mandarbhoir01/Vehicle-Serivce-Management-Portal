@@ -15,6 +15,7 @@ let authRole = "admin";
 let accountMode = "guest";
 let authenticatedUser = null;
 let pendingBooking = null;
+const ADMIN_DEMO_PASSWORD = "MGMAdmin@2026";
 window.MGM_ACCOUNT_MODE = accountMode;
 
 function initialsFor(name) {
@@ -24,7 +25,8 @@ function initialsFor(name) {
 function setAccountMode(mode, user = null) {
   accountMode = mode;
   window.MGM_ACCOUNT_MODE = mode;
-  authenticatedUser = mode === "google" ? user : null;
+  if (mode === "google") authenticatedUser = user;
+  if (mode === "guest" || mode === "demo") authenticatedUser = null;
 
   if (mode === "google") {
     const name = user.displayName || user.email || "Customer";
@@ -62,6 +64,10 @@ function setAuthRole(nextRole) {
   authError.classList.add("hidden");
   if (isAdmin) authName.focus();
   else document.querySelector("#google-signin").focus();
+  if (isAdmin) {
+    authName.value = "";
+    authPassword.value = "";
+  }
 }
 
 function showPortal(nextRole, bookService) {
@@ -100,6 +106,20 @@ document.querySelectorAll("[data-open-booking], [data-book-service]").forEach((b
   showPortal("customer", type);
 }));
 siteProfile.addEventListener("click", () => showPortal(accountMode === "admin" ? "admin" : "customer"));
+window.addEventListener("mgm-role-switch-request", (event) => {
+  if (event.detail.role === "admin") {
+    openLogin("admin");
+  } else if (accountMode === "google" && authenticatedUser) {
+    window.dispatchEvent(new CustomEvent("mgm-request-customer-reauth"));
+  } else {
+    openLogin("customer");
+  }
+});
+window.addEventListener("mgm-role-switch-auth-failed", () => openLogin("customer"));
+window.addEventListener("mgm-role-switch-success", (event) => {
+  setAccountMode("google", event.detail.user);
+  showPortal("customer");
+});
 
 document.querySelectorAll(".auth-tab").forEach((tab) => tab.addEventListener("click", () => setAuthRole(tab.dataset.authRole)));
 customerEntry.addEventListener("click", () => {
@@ -116,7 +136,7 @@ authBackdrop.addEventListener("click", (event) => {
 });
 authForm.addEventListener("submit", (event) => {
   event.preventDefault();
-  if (authRole !== "admin" || authName.value.trim().toLowerCase() !== "mandar" || !authPassword.value.trim()) {
+  if (authRole !== "admin" || authName.value.trim().toLowerCase() !== "mandar" || authPassword.value !== ADMIN_DEMO_PASSWORD) {
     authError.classList.remove("hidden");
     return;
   }

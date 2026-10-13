@@ -29,6 +29,13 @@ async function initializeFirebaseAuth() {
     const app = initializeApp(firebaseConfig);
     const auth = firebaseAuth.getAuth(app);
     const provider = new firebaseAuth.GoogleAuthProvider();
+    firebaseAuth.onAuthStateChanged(auth, (user) => {
+      window.dispatchEvent(new CustomEvent("mgm-auth-state", { detail: { user } }));
+    });
+    window.addEventListener("mgm-demo-selected", () => {
+      firebaseAuth.signOut(auth).catch((error) => console.error("Firebase sign-out failed", error));
+    });
+    if (window.MGM_ACCOUNT_MODE === "demo") await firebaseAuth.signOut(auth);
     const redirectResult = await firebaseAuth.getRedirectResult(auth);
     if (redirectResult?.user) finishCustomerSignIn(redirectResult.user);
 

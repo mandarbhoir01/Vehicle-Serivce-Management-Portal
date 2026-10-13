@@ -7,8 +7,52 @@ const authPassword = document.querySelector("#auth-password");
 const authError = document.querySelector("#auth-error");
 const customerAuthPanel = document.querySelector("#customer-auth-panel");
 const customerEntry = document.querySelector("#customer-entry");
+const siteProfile = document.querySelector("#site-profile");
+const siteProfileName = document.querySelector("#site-profile-name");
+const siteProfileAvatar = document.querySelector("#site-profile-avatar");
 const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 let authRole = "admin";
+let accountMode = "guest";
+let authenticatedUser = null;
+let pendingBooking = null;
+window.MGM_ACCOUNT_MODE = accountMode;
+
+function initialsFor(name) {
+  return name.split(/[\s@._+-]+/).filter(Boolean).slice(0, 2).map((part) => part[0].toUpperCase()).join("") || "CU";
+}
+
+function setAccountMode(mode, user = null) {
+  accountMode = mode;
+  window.MGM_ACCOUNT_MODE = mode;
+  authenticatedUser = mode === "google" ? user : null;
+
+  if (mode === "google") {
+    currentUser.id = user.uid;
+    currentUser.name = user.displayName || user.email || "Customer";
+    currentUser.initials = initialsFor(currentUser.name);
+  } else if (mode === "demo") {
+    Object.assign(currentUser, { id: "aarav", name: "Aarav Patel", initials: "AP" });
+    window.dispatchEvent(new CustomEvent("mgm-demo-selected"));
+  } else if (mode === "admin") {
+    Object.assign(currentUser, { id: "mandar-admin", name: "Mandar", initials: "MA" });
+  } else {
+    Object.assign(currentUser, { id: "aarav", name: "Aarav Patel", initials: "AP" });
+  }
+
+  const hasAccount = ["google", "demo", "admin"].includes(mode);
+  document.querySelector("#site-login").classList.toggle("hidden", hasAccount);
+  siteProfile.classList.toggle("hidden", !hasAccount);
+  document.querySelectorAll(".garage-access").forEach((link) => link.classList.toggle("hidden", !hasAccount));
+  siteProfileName.textContent = mode === "demo" ? "Demo user" : currentUser.name;
+  siteProfileAvatar.textContent = currentUser.initials;
+  siteProfile.setAttribute("aria-label", `${siteProfileName.textContent}: open garage`);
+}
+
+function openLogin(nextRole = "customer", bookService = null) {
+  if (bookService) pendingBooking = bookService;
+  authBackdrop.classList.remove("hidden");
+  setAuthRole(nextRole);
+}
 
 function setAuthRole(nextRole) {
   authRole = nextRole;
@@ -19,9 +63,14 @@ function setAuthRole(nextRole) {
   document.querySelector("#auth-title").textContent = isAdmin ? "ADMIN LOGIN" : "CUSTOMER LOGIN";
   authError.classList.add("hidden");
   if (isAdmin) authName.focus();
+  else document.querySelector("#google-signin").focus();
 }
 
 function showPortal(nextRole, bookService) {
+  if (nextRole === "customer" && accountMode === "guest") {
+    openLogin("customer", bookService);
+    return;
+  }
   role = nextRole;
   activeView = "overview";
   publicSite.classList.add("hidden");
@@ -45,36 +94,51 @@ function showPublicSite() {
   window.scrollTo({ top: 0, behavior: prefersReducedMotion ? "instant" : "smooth" });
 }
 
-document.querySelectorAll("[data-open-login]").forEach((button) => button.addEventListener("click", () => {
-  authBackdrop.classList.remove("hidden");
-  setAuthRole(button.dataset.openLogin || "admin");
-}));
+document.querySelectorAll("[data-open-login]").forEach((button) => button.addEventListener("click", () => openLogin(button.dataset.openLogin || "admin")));
 
 document.querySelectorAll("[data-open-portal]").forEach((button) => button.addEventListener("click", () => showPortal(button.dataset.openPortal || "customer")));
 document.querySelectorAll("[data-open-booking], [data-book-service]").forEach((button) => button.addEventListener("click", () => {
   const type = button.dataset.bookService || "Routine service";
   showPortal("customer", type);
 }));
+siteProfile.addEventListener("click", () => showPortal(accountMode === "admin" ? "admin" : "customer"));
 
 document.querySelectorAll(".auth-tab").forEach((tab) => tab.addEventListener("click", () => setAuthRole(tab.dataset.authRole)));
-customerEntry.addEventListener("click", () => showPortal("customer"));
+customerEntry.addEventListener("click", () => {
+  setAccountMode("demo");
+  const booking = pendingBooking;
+  pendingBooking = null;
+  showPortal("customer", booking);
+});
 document.querySelector("#close-auth").addEventListener("click", () => authBackdrop.classList.add("hidden"));
-authBackdrop.addEventListener("click", (event) => { if (event.target === authBackdrop) authBackdrop.classList.add("hidden"); });
+authBackdrop.addEventListener("click", (event) => {
+  if (event.target !== authBackdrop) return;
+  pendingBooking = null;
+  authBackdrop.classList.add("hidden");
+});
 authForm.addEventListener("submit", (event) => {
   event.preventDefault();
   if (authRole !== "admin" || authName.value.trim().toLowerCase() !== "mandar" || !authPassword.value.trim()) {
     authError.classList.remove("hidden");
     return;
   }
+  setAccountMode("admin");
   showPortal("admin");
 });
 
 window.addEventListener("mgm-auth-success", (event) => {
-  const user = event.detail.user;
-  currentUser.id = user.uid;
-  currentUser.name = user.displayName || user.phoneNumber || "Customer";
-  currentUser.initials = currentUser.name.split(/[\s@._+-]+/).filter(Boolean).slice(0, 2).map((part) => part[0].toUpperCase()).join("") || "CU";
-  showPortal("customer");
+  setAccountMode("google", event.detail.user);
+  const booking = pendingBooking;
+  pendingBooking = null;
+  showPortal("customer", booking);
+});
+
+window.addEventListener("mgm-auth-state", (event) => {
+  if (event.detail.user) {
+    setAccountMode("google", event.detail.user);
+  } else if (accountMode === "google") {
+    setAccountMode("guest");
+  }
 });
 
 document.querySelector("#back-to-site").addEventListener("click", showPublicSite);

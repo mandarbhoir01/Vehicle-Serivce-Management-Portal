@@ -37,4 +37,4 @@ Firebase prints the live `web.app` URL after deployment. Hosting is configured w
 
 Use **Log in** and choose the Mandar admin demo, or open **My garage** to enter the customer view. Book buttons open the service request form. Changes are saved in browser local storage and can be reset by clearing site data. The admin entry remains a demo role switch; it is not secure authentication.
 
-Google sign-in and Hosting can run on Firebase's no-cost tier within its current limits. This prototype does not send SMS or custom welcome emails. Request and vehicle changes are stored in browser local storage; shared cloud storage, real payment processing, and production admin authorization are not configured.
+Google sign-in and Hosting can run on Firebase's no-cost tier within its current limits. This prototype does not send SMS or custom welcome emails. Request, vehicle, and review data are stored in browser local storage. The UPI form is a demo simulation only: it does not contact a payment gateway, save UPI IDs, or transfer funds. Shared cloud storage, real payment processing, and production admin authorization are not configured.

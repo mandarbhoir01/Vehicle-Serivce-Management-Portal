@@ -55,6 +55,11 @@ function loadAccountData(userId) {
 }
 
 let data = loadAccountData(currentUser.id);
+function ensureDemoInvoice() {
+  if (currentUser.id !== "aarav" || data.payments.some((payment) => payment.id === "INV-DEMO-UPI")) return;
+  data.payments.unshift({ id: "INV-DEMO-UPI", owner: "aarav", requestId: "MD-1048", description: "Demo UPI checkout", amount: 1, date: new Date().toISOString().slice(0, 10), status: "Due", demoOnly: true });
+}
+ensureDemoInvoice();
 let role = "customer";
 let activeView = "overview";
 let toastTimer;
@@ -109,6 +114,7 @@ function setCustomerProfile(profile) {
   const changed = currentUser.id !== nextId;
   Object.assign(currentUser, { id: nextId, name: profile.name || "Customer", initials: profile.initials || "CU" });
   if (changed) data = loadAccountData(nextId);
+  ensureDemoInvoice();
   render();
 }
 function esc(value) { return String(value).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]); }
@@ -181,7 +187,9 @@ function renderVehicles() {
 function renderPayments() {
   const list = payments(), due = list.filter((item) => item.status === "Due").reduce((sum, item) => sum + item.amount, 0);
   el.paymentSummary.innerHTML = `<span>Outstanding balance</span><strong>${money(due)}</strong>`;
-  el.payments.innerHTML = list.slice(0, 3).map((item) => `<div class="payment-row"><div class="payment-copy"><strong>${esc(item.description)}</strong><span>${esc(item.id)} · ${date(item.date)}</span></div><div class="payment-amount">${money(item.amount)}<div class="payment-pill ${item.status === "Due" ? "due" : ""}">${esc(item.status)}</div></div></div>`).join("") || '<div class="empty-state">No payments on record.</div>';
+  const rows = list.slice(0, 3).map((item) => `<div class="payment-row"><div class="payment-copy"><strong>${esc(item.description)}</strong><span>${esc(item.id)} · ${date(item.date)}</span></div><div class="payment-amount">${money(item.amount)}<div class="payment-pill ${item.status === "Due" ? "due" : ""}">${esc(item.status)}</div>${role === "customer" && item.status === "Due" ? `<button class="payment-action" type="button" data-pay-invoice="${esc(item.id)}">Pay with UPI</button>` : ""}</div></div>`).join("");
+  const demoButton = role === "customer" ? '<button class="payment-action payment-demo-action" type="button" data-pay-invoice="__demo__">Try UPI demo · ₹1</button>' : "";
+  el.payments.innerHTML = `${rows || '<div class="empty-state">No payments on record.</div>'}${demoButton}`;
 }
 
 function requestRows(list) {
@@ -211,7 +219,8 @@ function renderFullView() {
     el.fullContent.innerHTML = list.length ? `<div class="record-list">${list.map((item) => `<div class="record-item"><span class="record-date">${date(item.date, { day: "numeric", month: "short", year: "numeric" })}</span><div><strong>${esc(item.service)} · ${esc(vehicleName(vehicleFor(item.vehicleId)))}</strong><p>${esc(item.notes)}</p></div><span class="record-mileage">${esc(item.mileage)}</span></div>`).join("")}</div>` : '<div class="empty-state">Completed services will be added to your history.</div>';
   } else {
     const list = payments();
-    el.fullContent.innerHTML = list.length ? `<div class="table-wrap view-table"><table><thead><tr><th>INVOICE</th><th>SERVICE</th><th>DATE</th><th>AMOUNT</th><th>STATUS</th></tr></thead><tbody>${list.map((item) => `<tr><td>${esc(item.id)}</td><td>${esc(item.description)}</td><td>${date(item.date, { day: "numeric", month: "short", year: "numeric" })}</td><td>${money(item.amount)}</td><td><span class="payment-pill ${item.status === "Due" ? "due" : ""}">${esc(item.status)}</span></td></tr>`).join("")}</tbody></table></div>` : '<div class="empty-state">No payments on record.</div>';
+    el.fullContent.innerHTML = list.length ? `<div class="table-wrap view-table"><table><thead><tr><th>INVOICE</th><th>SERVICE</th><th>DATE</th><th>AMOUNT</th><th>STATUS</th><th>ACTION</th></tr></thead><tbody>${list.map((item) => `<tr><td>${esc(item.id)}</td><td>${esc(item.description)}</td><td>${date(item.date, { day: "numeric", month: "short", year: "numeric" })}</td><td>${money(item.amount)}</td><td><span class="payment-pill ${item.status === "Due" ? "due" : ""}">${esc(item.status)}</span></td><td>${role === "customer" && item.status === "Due" ? `<button class="payment-action" type="button" data-pay-invoice="${esc(item.id)}">Pay with UPI</button>` : "—"}</td></tr>`).join("")}</tbody></table></div>` : '<div class="empty-state">No payments on record.</div>';
+    if (role === "customer") el.fullContent.insertAdjacentHTML("beforeend", '<button class="payment-action payment-demo-action" type="button" data-pay-invoice="__demo__">Try UPI demo · ₹1</button>');
   }
 }
 
@@ -241,6 +250,25 @@ function render() {
 function toast(message) {
   el.toast.textContent = message; el.toast.classList.add("visible"); clearTimeout(toastTimer);
   toastTimer = setTimeout(() => el.toast.classList.remove("visible"), 2700);
+}
+
+function openPaymentModal(invoiceId) {
+  if (role !== "customer") return;
+  const isDemo = invoiceId === "__demo__";
+  const invoice = isDemo ? null : payments().find((item) => item.id === invoiceId && item.status === "Due");
+  if (!isDemo && !invoice) return;
+  document.querySelector("#payment-form").reset();
+  document.querySelector("#payment-form-error").classList.add("hidden");
+  document.querySelector("#payment-invoice-summary").innerHTML = isDemo ? `<span>MGM Automotive · test checkout</span><strong>${money(1)}</strong>` : `<span>${esc(invoice.id)} · ${esc(invoice.description)}</span><strong>${money(invoice.amount)}</strong>`;
+  document.querySelector("#payment-modal-backdrop").dataset.invoiceId = isDemo ? "" : invoice.id;
+  document.querySelector("#payment-modal-backdrop").classList.remove("hidden");
+  document.querySelector("#payment-upi-id").focus();
+}
+
+function closePaymentModal() {
+  document.querySelector("#payment-modal-backdrop").classList.add("hidden");
+  delete document.querySelector("#payment-modal-backdrop").dataset.invoiceId;
+  document.querySelector("#payment-form").reset();
 }
 
 function renderBrandPicker() {
@@ -328,6 +356,9 @@ el.modal.addEventListener("click", (event) => { if (event.target === el.modal) e
 document.querySelector("#close-vehicle-modal").addEventListener("click", closeVehicleModal);
 document.querySelector("#cancel-vehicle-modal").addEventListener("click", closeVehicleModal);
 document.querySelector("#vehicle-modal-backdrop").addEventListener("click", (event) => { if (event.target.id === "vehicle-modal-backdrop") closeVehicleModal(); });
+document.querySelector("#close-payment-modal").addEventListener("click", closePaymentModal);
+document.querySelector("#cancel-payment").addEventListener("click", closePaymentModal);
+document.querySelector("#payment-modal-backdrop").addEventListener("click", (event) => { if (event.target.id === "payment-modal-backdrop") closePaymentModal(); });
 document.querySelectorAll(".vehicle-type-option").forEach((button) => button.addEventListener("click", () => setVehicleType(button.dataset.vehicleType)));
 document.querySelector("#vehicle-make-search").addEventListener("input", renderBrandPicker);
 document.addEventListener("error", (event) => {
@@ -339,6 +370,7 @@ document.addEventListener("keydown", (event) => {
   if (event.key !== "Escape") return;
   el.modal.classList.add("hidden");
   closeVehicleModal();
+  closePaymentModal();
 });
 
 document.querySelector("#vehicle-form").addEventListener("submit", (event) => {
@@ -378,9 +410,39 @@ document.addEventListener("change", (event) => {
 });
 
 document.addEventListener("click", (event) => {
+  const paymentButton = event.target.closest("[data-pay-invoice]");
+  if (paymentButton) { openPaymentModal(paymentButton.dataset.payInvoice); return; }
   const id = event.target.dataset.removeVehicle;
   if (!id || !confirm("Remove this vehicle from your garage? Its service records will remain.")) return;
   data.vehicles = data.vehicles.filter((item) => item.id !== id); save(); render(); toast("Vehicle removed from your garage.");
+});
+
+document.querySelector("#payment-form").addEventListener("submit", (event) => {
+  event.preventDefault();
+  const upiId = document.querySelector("#payment-upi-id").value.trim();
+  const error = document.querySelector("#payment-form-error");
+  const validUpiId = /^[A-Za-z0-9][A-Za-z0-9._-]{0,80}@[A-Za-z0-9][A-Za-z0-9.-]{0,50}$/.test(upiId);
+  if (!validUpiId) {
+    error.textContent = "Enter a valid UPI ID, for example name@bank.";
+    error.classList.remove("hidden");
+    document.querySelector("#payment-upi-id").focus();
+    return;
+  }
+  const invoiceId = document.querySelector("#payment-modal-backdrop").dataset.invoiceId;
+  if (!invoiceId) {
+    closePaymentModal();
+    toast("UPI demo completed. No payment was sent and the UPI ID was not saved.");
+    return;
+  }
+  const invoice = data.payments.find((item) => item.id === invoiceId && item.owner === currentUser.id && item.status === "Due");
+  if (!invoice) { closePaymentModal(); render(); return; }
+  invoice.status = "Demo paid";
+  invoice.paymentReference = `DEMO-${Date.now()}`;
+  invoice.paidAt = new Date().toISOString();
+  save();
+  closePaymentModal();
+  render();
+  toast(`Demo payment recorded for ${invoice.id}. No money was transferred.`);
 });
 
 document.querySelector("#review-form").addEventListener("submit", (event) => {

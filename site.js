@@ -7,6 +7,12 @@ const authPassword = document.querySelector("#auth-password");
 const authError = document.querySelector("#auth-error");
 const customerAuthPanel = document.querySelector("#customer-auth-panel");
 const customerEntry = document.querySelector("#customer-entry");
+const profileBackdrop = document.querySelector("#profile-backdrop");
+const customerProfileForm = document.querySelector("#customer-profile-form");
+const profileNameInput = document.querySelector("#profile-full-name");
+const profilePhoneInput = document.querySelector("#profile-phone");
+const profileEmail = document.querySelector("#profile-email");
+const profileFormError = document.querySelector("#profile-form-error");
 const siteProfile = document.querySelector("#site-profile");
 const siteProfileName = document.querySelector("#site-profile-name");
 const siteProfileAvatar = document.querySelector("#site-profile-avatar");
@@ -16,6 +22,8 @@ let accountMode = "guest";
 let authenticatedUser = null;
 let pendingBooking = null;
 const ADMIN_DEMO_PASSWORD = "MGMAdmin@2026";
+const CUSTOMER_PROFILE_PREFIX = "mgm-customer-profile-v1";
+let profileSetupUser = null;
 window.MGM_ACCOUNT_MODE = accountMode;
 
 function initialsFor(name) {
@@ -46,6 +54,42 @@ function setAccountMode(mode, user = null) {
   siteProfileName.textContent = mode === "demo" ? "Demo customer" : currentUser.name;
   siteProfileAvatar.textContent = currentUser.initials;
   siteProfile.setAttribute("aria-label", `${siteProfileName.textContent}: open garage`);
+}
+
+function savedCustomerProfile(userId) {
+  try {
+    return JSON.parse(localStorage.getItem(`${CUSTOMER_PROFILE_PREFIX}:${userId}`) || "null");
+  } catch {
+    return null;
+  }
+}
+
+function openCustomerProfile(user, savedProfile = null) {
+  if (profileSetupUser?.uid === user.uid && !profileBackdrop.classList.contains("hidden")) return;
+  profileSetupUser = user;
+  profileNameInput.value = savedProfile?.name || user.displayName || "";
+  profilePhoneInput.value = savedProfile?.phone || "";
+  profileEmail.textContent = user.email ? `Signed in as ${user.email}` : "Signed in with Google";
+  profileFormError.classList.add("hidden");
+  authBackdrop.classList.add("hidden");
+  profileBackdrop.classList.remove("hidden");
+  profileNameInput.focus();
+}
+
+function handleGoogleUser(user) {
+  setAccountMode("google", user);
+  const profile = savedCustomerProfile(user.uid);
+  if (!profile?.name || !profile?.phone) {
+    openCustomerProfile(user, profile);
+    return;
+  }
+  profileBackdrop.classList.add("hidden");
+  profileSetupUser = null;
+  setCustomerProfile({ id: user.uid, name: profile.name, initials: initialsFor(profile.name) });
+  document.querySelector("#request-contact").value = profile.phone;
+  const booking = pendingBooking;
+  pendingBooking = null;
+  showPortal("customer", booking);
 }
 
 function openLogin(nextRole = "customer", bookService = null) {
@@ -118,8 +162,7 @@ window.addEventListener("mgm-role-switch-request", (event) => {
 });
 window.addEventListener("mgm-role-switch-auth-failed", () => openLogin("customer"));
 window.addEventListener("mgm-role-switch-success", (event) => {
-  setAccountMode("google", event.detail.user);
-  showPortal("customer");
+  handleGoogleUser(event.detail.user);
 });
 
 document.querySelectorAll(".auth-tab").forEach((tab) => tab.addEventListener("click", () => setAuthRole(tab.dataset.authRole)));
@@ -128,6 +171,18 @@ customerEntry.addEventListener("click", () => {
   const booking = pendingBooking;
   pendingBooking = null;
   showPortal("customer", booking);
+});
+customerProfileForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  if (!profileSetupUser) return;
+  const profile = { name: profileNameInput.value.trim(), phone: profilePhoneInput.value.trim() };
+  try {
+    localStorage.setItem(`${CUSTOMER_PROFILE_PREFIX}:${profileSetupUser.uid}`, JSON.stringify(profile));
+  } catch {
+    profileFormError.classList.remove("hidden");
+    return;
+  }
+  handleGoogleUser(profileSetupUser);
 });
 document.querySelector("#close-auth").addEventListener("click", () => authBackdrop.classList.add("hidden"));
 authBackdrop.addEventListener("click", (event) => {
@@ -146,16 +201,15 @@ authForm.addEventListener("submit", (event) => {
 });
 
 window.addEventListener("mgm-auth-success", (event) => {
-  setAccountMode("google", event.detail.user);
-  const booking = pendingBooking;
-  pendingBooking = null;
-  showPortal("customer", booking);
+  handleGoogleUser(event.detail.user);
 });
 
 window.addEventListener("mgm-auth-state", (event) => {
   if (event.detail.user) {
-    setAccountMode("google", event.detail.user);
+    handleGoogleUser(event.detail.user);
   } else if (accountMode === "google") {
+    profileBackdrop.classList.add("hidden");
+    profileSetupUser = null;
     setAccountMode("guest");
   }
 });

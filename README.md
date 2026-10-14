@@ -2,6 +2,11 @@
 
 A responsive garage website inspired by the supplied reference, with a public services and reviews homepage plus a customer/admin service portal. Customers can track cars and bikes, submit repair or modification requests, review service records, and view payment status. The Mandar admin demo can review requests and update their statuses.
 
+## Project links
+
+- Website: <https://mgm-automotive.web.app>
+- GitHub: <https://github.com/mandarbhoir01/Vehicle-Serivce-Management-Portal>
+
 ## Run locally
 
 Open `index.html` in a browser, or serve this folder with any static HTTP server. For example, with Python installed:

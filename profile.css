@@ -1,0 +1,13 @@
+.profile-backdrop{z-index:13}
+.profile-modal{width:min(100%,480px);max-height:min(90dvh,700px);overflow-y:auto}
+.profile-modal .modal-heading{margin-bottom:16px}
+.profile-modal .modal-heading h2{font-size:24px}
+.profile-modal form{display:grid;gap:12px}
+.profile-modal label{display:grid;gap:6px;color:#545a50;font-size:10px;font-weight:700}
+.profile-modal input{width:100%;min-height:39px;padding:9px 10px;border:1px solid #e6e5dc;border-radius:4px;background:#fff;color:#30352c;font-size:11px}
+.profile-modal input:focus{border-color:#69784c;outline:2px solid #69784c25}
+.profile-email{margin-top:8px;color:#858a81;font-size:10px;overflow-wrap:anywhere}
+.profile-form-error{color:#a33b2f;font-size:11px}
+.profile-modal .modal-actions{margin-top:2px;padding-top:11px;border-top:1px solid #efeee8}
+.profile-modal .modal-actions button{width:100%;justify-content:center}
+@media(max-width:520px){.profile-modal{padding:18px 15px}}

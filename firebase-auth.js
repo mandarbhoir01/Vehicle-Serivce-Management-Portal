@@ -35,15 +35,19 @@ async function initializeFirebaseAuth() {
     window.addEventListener("mgm-demo-selected", () => {
       firebaseAuth.signOut(auth).catch((error) => console.error("Firebase sign-out failed", error));
     });
+    window.addEventListener("mgm-request-signout", () => {
+      firebaseAuth.signOut(auth).catch((error) => console.error("Firebase sign-out failed", error));
+    });
     if (window.MGM_ACCOUNT_MODE === "demo") await firebaseAuth.signOut(auth);
     const redirectResult = await firebaseAuth.getRedirectResult(auth);
     if (redirectResult?.user) finishCustomerSignIn(redirectResult.user);
 
     googleButton.addEventListener("click", async () => {
       googleButton.disabled = true;
-      authStatus.textContent = "Redirecting to Google...";
+      authStatus.textContent = "Opening Google sign-in...";
       try {
-        await firebaseAuth.signInWithRedirect(auth, provider);
+        const result = await firebaseAuth.signInWithPopup(auth, provider);
+        finishCustomerSignIn(result.user);
       } catch (error) {
         showAuthError(error);
       } finally {

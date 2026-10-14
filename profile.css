@@ -10,4 +10,12 @@
 .profile-form-error{color:#a33b2f;font-size:11px}
 .profile-modal .modal-actions{margin-top:2px;padding-top:11px;border-top:1px solid #efeee8}
 .profile-modal .modal-actions button{width:100%;justify-content:center}
+.site-account{position:relative}
+.site-profile-menu{position:absolute;top:calc(100% + 9px);right:0;z-index:14;width:220px;padding:7px;border:1px solid #e4e3db;border-radius:4px;background:#fffefa;box-shadow:0 12px 34px #13180f20}
+.site-profile-menu-heading{display:grid;gap:3px;padding:9px 10px 11px;border-bottom:1px solid #efeee8}
+.site-profile-menu-heading strong{overflow:hidden;color:#30352c;font-size:12px;text-overflow:ellipsis;white-space:nowrap}
+.site-profile-menu-heading span{overflow:hidden;color:#858a81;font-size:10px;text-overflow:ellipsis;white-space:nowrap}
+.site-profile-menu button{width:100%;padding:10px;border:0;background:transparent;color:#454a41;text-align:left;font-size:11px;cursor:pointer}
+.site-profile-menu button:hover,.site-profile-menu button:focus-visible{background:#f2f3ec;color:#30352c}
+.profile-close{flex:none;margin-left:12px}
 @media(max-width:520px){.profile-modal{padding:18px 15px}}

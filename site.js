@@ -13,6 +13,12 @@ const profileNameInput = document.querySelector("#profile-full-name");
 const profilePhoneInput = document.querySelector("#profile-phone");
 const profileEmail = document.querySelector("#profile-email");
 const profileFormError = document.querySelector("#profile-form-error");
+const profileTitle = document.querySelector("#profile-modal-title");
+const profileIntro = document.querySelector(".profile-modal .form-intro");
+const profileSubmitButton = document.querySelector("#customer-profile-form button[type='submit']");
+const profileMenu = document.querySelector("#site-profile-menu");
+const profileMenuName = document.querySelector("#site-profile-menu-name");
+const profileMenuEmail = document.querySelector("#site-profile-menu-email");
 const siteProfile = document.querySelector("#site-profile");
 const siteProfileName = document.querySelector("#site-profile-name");
 const siteProfileAvatar = document.querySelector("#site-profile-avatar");
@@ -24,6 +30,13 @@ let pendingBooking = null;
 const ADMIN_DEMO_PASSWORD = "MGMAdmin@2026";
 const CUSTOMER_PROFILE_PREFIX = "mgm-customer-profile-v1";
 let profileSetupUser = null;
+let editingCustomerProfile = false;
+const profileCloseButton = document.createElement("button");
+profileCloseButton.type = "button";
+profileCloseButton.className = "icon-button profile-close hidden";
+profileCloseButton.setAttribute("aria-label", "Close profile management");
+profileCloseButton.textContent = "×";
+document.querySelector(".profile-modal .modal-heading").append(profileCloseButton);
 window.MGM_ACCOUNT_MODE = accountMode;
 
 function initialsFor(name) {
@@ -54,6 +67,10 @@ function setAccountMode(mode, user = null) {
   siteProfileName.textContent = mode === "demo" ? "Demo customer" : currentUser.name;
   siteProfileAvatar.textContent = currentUser.initials;
   siteProfile.setAttribute("aria-label", `${siteProfileName.textContent}: open garage`);
+  profileMenuName.textContent = currentUser.name;
+  profileMenuEmail.textContent = mode === "google" ? user.email || "Google account" : mode === "demo" ? "Demo customer" : "Administrator";
+  profileMenu.classList.add("hidden");
+  siteProfile.setAttribute("aria-expanded", "false");
 }
 
 function savedCustomerProfile(userId) {
@@ -64,12 +81,17 @@ function savedCustomerProfile(userId) {
   }
 }
 
-function openCustomerProfile(user, savedProfile = null) {
-  if (profileSetupUser?.uid === user.uid && !profileBackdrop.classList.contains("hidden")) return;
+function openCustomerProfile(user, savedProfile = null, editing = false) {
+  if (profileSetupUser?.uid === user.uid && !profileBackdrop.classList.contains("hidden") && editingCustomerProfile === editing) return;
   profileSetupUser = user;
+  editingCustomerProfile = editing;
   profileNameInput.value = savedProfile?.name || user.displayName || "";
   profilePhoneInput.value = savedProfile?.phone || "";
   profileEmail.textContent = user.email ? `Signed in as ${user.email}` : "Signed in with Google";
+  profileTitle.textContent = editing ? "Manage your profile." : "Set up your profile.";
+  profileIntro.textContent = editing ? "Update your customer contact information." : "Add your contact details before entering your service dashboard.";
+  profileSubmitButton.innerHTML = editing ? "Save profile changes <span>↗</span>" : "Create profile and continue <span>↗</span>";
+  profileCloseButton.classList.toggle("hidden", !editing);
   profileFormError.classList.add("hidden");
   authBackdrop.classList.add("hidden");
   profileBackdrop.classList.remove("hidden");
@@ -77,6 +99,7 @@ function openCustomerProfile(user, savedProfile = null) {
 }
 
 function handleGoogleUser(user) {
+  if (editingCustomerProfile && profileSetupUser?.uid === user.uid && !profileBackdrop.classList.contains("hidden")) return;
   setAccountMode("google", user);
   const profile = savedCustomerProfile(user.uid);
   if (!profile?.name || !profile?.phone) {
@@ -85,7 +108,12 @@ function handleGoogleUser(user) {
   }
   profileBackdrop.classList.add("hidden");
   profileSetupUser = null;
+  editingCustomerProfile = false;
   setCustomerProfile({ id: user.uid, name: profile.name, initials: initialsFor(profile.name) });
+  siteProfileName.textContent = currentUser.name;
+  siteProfileAvatar.textContent = currentUser.initials;
+  profileMenuName.textContent = currentUser.name;
+  siteProfile.setAttribute("aria-label", `${currentUser.name}: open account menu`);
   document.querySelector("#request-contact").value = profile.phone;
   const booking = pendingBooking;
   pendingBooking = null;
@@ -150,7 +178,38 @@ document.querySelectorAll("[data-open-booking], [data-book-service]").forEach((b
   const type = button.dataset.bookService || "Routine service";
   showPortal("customer", type);
 }));
-siteProfile.addEventListener("click", () => showPortal(accountMode === "admin" ? "admin" : "customer"));
+siteProfile.addEventListener("click", () => {
+  const isOpen = !profileMenu.classList.contains("hidden");
+  profileMenu.classList.toggle("hidden", isOpen);
+  siteProfile.setAttribute("aria-expanded", String(!isOpen));
+});
+document.querySelector("#manage-profile-button").addEventListener("click", () => {
+  profileMenu.classList.add("hidden");
+  siteProfile.setAttribute("aria-expanded", "false");
+  if (authenticatedUser) openCustomerProfile(authenticatedUser, savedCustomerProfile(authenticatedUser.uid), true);
+});
+document.querySelector("#open-customer-dashboard").addEventListener("click", () => {
+  profileMenu.classList.add("hidden");
+  showPortal("customer");
+});
+document.querySelector("#sign-out-button").addEventListener("click", () => {
+  if (accountMode === "google") window.dispatchEvent(new CustomEvent("mgm-request-signout"));
+  setAccountMode("guest");
+  showPublicSite();
+});
+profileCloseButton.addEventListener("click", () => {
+  profileBackdrop.classList.add("hidden");
+  profileSetupUser = null;
+  editingCustomerProfile = false;
+});
+document.querySelector("#top-avatar").addEventListener("click", () => {
+  if (authenticatedUser) openCustomerProfile(authenticatedUser, savedCustomerProfile(authenticatedUser.uid), true);
+});
+document.addEventListener("click", (event) => {
+  if (event.target.closest(".site-account")) return;
+  profileMenu.classList.add("hidden");
+  siteProfile.setAttribute("aria-expanded", "false");
+});
 window.addEventListener("mgm-role-switch-request", (event) => {
   if (event.detail.role === "admin") {
     openLogin("admin");
@@ -182,7 +241,9 @@ customerProfileForm.addEventListener("submit", (event) => {
     profileFormError.classList.remove("hidden");
     return;
   }
-  handleGoogleUser(profileSetupUser);
+  const user = profileSetupUser;
+  editingCustomerProfile = false;
+  handleGoogleUser(user);
 });
 document.querySelector("#close-auth").addEventListener("click", () => authBackdrop.classList.add("hidden"));
 authBackdrop.addEventListener("click", (event) => {
@@ -210,6 +271,7 @@ window.addEventListener("mgm-auth-state", (event) => {
   } else if (accountMode === "google") {
     profileBackdrop.classList.add("hidden");
     profileSetupUser = null;
+    editingCustomerProfile = false;
     setAccountMode("guest");
   }
 });
@@ -235,6 +297,9 @@ document.querySelectorAll(".site-nav a").forEach((link) => link.addEventListener
 
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") {
+    if (editingCustomerProfile) profileCloseButton.click();
+    profileMenu.classList.add("hidden");
+    siteProfile.setAttribute("aria-expanded", "false");
     authBackdrop.classList.add("hidden");
     header.classList.remove("menu-open");
     menuButton.setAttribute("aria-expanded", "false");

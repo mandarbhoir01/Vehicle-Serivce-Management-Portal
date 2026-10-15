@@ -17,5 +17,7 @@
 .site-profile-menu-heading span{overflow:hidden;color:#858a81;font-size:10px;text-overflow:ellipsis;white-space:nowrap}
 .site-profile-menu button{width:100%;padding:10px;border:0;background:transparent;color:#454a41;text-align:left;font-size:11px;cursor:pointer}
 .site-profile-menu button:hover,.site-profile-menu button:focus-visible{background:#f2f3ec;color:#30352c}
+.profile-action-error{margin:5px 10px 8px;color:#a33b2f;font-size:10px}
+.site-profile-menu button:disabled{opacity:.55;cursor:wait}
 .profile-close{flex:none;margin-left:12px}
 @media(max-width:520px){.profile-modal{padding:18px 15px}}

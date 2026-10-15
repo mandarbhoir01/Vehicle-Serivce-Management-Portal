@@ -19,6 +19,7 @@ const profileSubmitButton = document.querySelector("#customer-profile-form butto
 const profileMenu = document.querySelector("#site-profile-menu");
 const profileMenuName = document.querySelector("#site-profile-menu-name");
 const profileMenuEmail = document.querySelector("#site-profile-menu-email");
+const profileActionError = document.querySelector("#profile-action-error");
 const siteProfile = document.querySelector("#site-profile");
 const siteProfileName = document.querySelector("#site-profile-name");
 const siteProfileAvatar = document.querySelector("#site-profile-avatar");
@@ -89,7 +90,7 @@ function openCustomerProfile(user, savedProfile = null, editing = false) {
   profilePhoneInput.value = savedProfile?.phone || "";
   profileEmail.textContent = user.email ? `Signed in as ${user.email}` : "Signed in with Google";
   profileTitle.textContent = editing ? "Manage your profile." : "Set up your profile.";
-  profileIntro.textContent = editing ? "Update your customer contact information." : "Add your contact details before entering your service dashboard.";
+  profileIntro.textContent = editing ? "Update your customer contact information." : "Add your contact details to finish setting up your customer account.";
   profileSubmitButton.innerHTML = editing ? "Save profile changes <span>↗</span>" : "Create profile and continue <span>↗</span>";
   profileCloseButton.classList.toggle("hidden", !editing);
   profileFormError.classList.add("hidden");
@@ -100,6 +101,7 @@ function openCustomerProfile(user, savedProfile = null, editing = false) {
 
 function handleGoogleUser(user) {
   if (editingCustomerProfile && profileSetupUser?.uid === user.uid && !profileBackdrop.classList.contains("hidden")) return;
+  if (accountMode === "google" && authenticatedUser?.uid === user.uid && !profileSetupUser && profileBackdrop.classList.contains("hidden") && !pendingBooking) return;
   setAccountMode("google", user);
   const profile = savedCustomerProfile(user.uid);
   if (!profile?.name || !profile?.phone) {
@@ -117,7 +119,8 @@ function handleGoogleUser(user) {
   document.querySelector("#request-contact").value = profile.phone;
   const booking = pendingBooking;
   pendingBooking = null;
-  showPortal("customer", booking);
+  if (booking) showPortal("customer", booking);
+  else showPublicSite();
 }
 
 function openLogin(nextRole = "customer", bookService = null) {
@@ -192,10 +195,24 @@ document.querySelector("#open-customer-dashboard").addEventListener("click", () 
   profileMenu.classList.add("hidden");
   showPortal("customer");
 });
-document.querySelector("#sign-out-button").addEventListener("click", () => {
-  if (accountMode === "google") window.dispatchEvent(new CustomEvent("mgm-request-signout"));
-  setAccountMode("guest");
-  showPublicSite();
+const signOutButton = document.querySelector("#sign-out-button");
+signOutButton.addEventListener("click", async () => {
+  profileActionError.classList.add("hidden");
+  signOutButton.disabled = true;
+  try {
+    if (authenticatedUser) {
+      if (typeof window.MGM_SIGN_OUT !== "function") throw new Error("Firebase sign-out is not ready.");
+      await window.MGM_SIGN_OUT();
+    }
+    setAccountMode("guest");
+    showPublicSite();
+  } catch (error) {
+    console.error("Customer sign-out failed", error);
+    profileActionError.textContent = "Could not sign out. Please try again.";
+    profileActionError.classList.remove("hidden");
+  } finally {
+    signOutButton.disabled = false;
+  }
 });
 profileCloseButton.addEventListener("click", () => {
   profileBackdrop.classList.add("hidden");

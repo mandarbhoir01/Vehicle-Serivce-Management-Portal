@@ -4,7 +4,6 @@ A responsive garage website inspired by the supplied reference, with a public se
 
 ## Project links
 
-- Website: <https://mgm-automotive.web.app>
 - GitHub: <https://github.com/mandarbhoir01/Vehicle-Serivce-Management-Portal>
 
 ## Run locally
@@ -17,12 +16,13 @@ python3 -m http.server 8000
 
 Then visit <http://localhost:8000>.
 
-## Free Firebase setup
+## Firebase setup
 
-1. Create a Firebase project and register a web app in the Firebase Console.
-2. Enable **Google** in Authentication and authorize `localhost` plus your Firebase Hosting domain. No Phone provider is used.
-3. Replace `null` in `firebase-config.js` with the web app config from Project settings.
-4. Install and sign in to Firebase CLI, then select your project:
+1. In the Firebase Console, enable **Google** and **Email/Password** under Authentication. Add `localhost` and your Hosting domain to the authorized domains.
+2. Enable **Cloud Firestore** in Native mode.
+3. Confirm `firebase-config.js` contains the web app config from Project settings.
+4. Create an admin account in Authentication, then create a document in the Firestore `admins` collection whose document ID is that account's Firebase Auth UID. Only accounts in this collection can access every customer's data.
+5. Install and sign in to Firebase CLI, then select your project:
 
 ```sh
 npm install -g firebase-tools
@@ -30,16 +30,16 @@ firebase login
 firebase use --add
 ```
 
-5. Deploy the website only:
+6. Deploy the website and Firestore rules:
 
 ```sh
-firebase deploy --only hosting
+firebase deploy --only hosting,firestore:rules
 ```
 
 Firebase prints the live `web.app` URL after deployment. Hosting is configured without Cloud Functions.
 
-## Demo behavior
+## Account and data behavior
 
-Use **Log in** and choose the Mandar admin demo, or open **My garage** to enter the customer view. Google customers are prompted to create a profile the first time they sign in; after setup, the website shows their account menu with profile management, dashboard access, and sign out. Profile details and service data are saved in browser local storage and can be reset by clearing site data. Book buttons open the service request form. The admin entry remains a demo role switch; it is not secure authentication.
+Google customers are prompted to create a profile the first time they sign in. Their profile, vehicles, requests, service records, and payment statuses are stored in Firestore under their authenticated UID. Existing browser-local account data is copied to Firestore the first time that account signs in. After profile setup, the profile control appears in the site header with profile management, dashboard access, and sign out.
 
-Google sign-in and Hosting can run on Firebase's no-cost tier within its current limits. This prototype does not send SMS or custom welcome emails. Request, vehicle, and review data are stored in browser local storage. The UPI form is a demo simulation only: it does not contact a payment gateway, save UPI IDs, or transfer funds. Shared cloud storage, real payment processing, and production admin authorization are not configured.
+Administrators sign in with the Firebase email/password account added to the `admins` collection. Admin request updates are saved to the affected customer account documents. The customer demo entry remains local-only. Public reviews remain browser-local. The UPI form is a demo simulation only: it does not contact a payment gateway, save UPI IDs, or transfer funds.

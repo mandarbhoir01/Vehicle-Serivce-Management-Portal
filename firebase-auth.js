@@ -22,20 +22,60 @@ async function initializeFirebaseAuth() {
   }
 
   try {
-    const [{ initializeApp }, firebaseAuth] = await Promise.all([
+    const [{ getApps, initializeApp }, firebaseAuth, firestore] = await Promise.all([
       import("https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js"),
       import("https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js"),
+      import("https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js"),
     ]);
-    const app = initializeApp(firebaseConfig);
+    const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
     const auth = firebaseAuth.getAuth(app);
+    const db = firestore.getFirestore(app);
+    const accountRef = (userId) => firestore.doc(db, "accounts", userId);
+    const isAdmin = async (user) => {
+      if (!user) return false;
+      const result = await firestore.getDoc(firestore.doc(db, "admins", user.uid));
+      return result.exists();
+    };
+    window.MGM_CLOUD = {
+      loadAccount: async (userId) => {
+        const snapshot = await firestore.getDoc(accountRef(userId));
+        return snapshot.exists() ? snapshot.data() : null;
+      },
+      saveAccount: async (userId, account) => firestore.setDoc(accountRef(userId), account, { merge: true }),
+      loadAllAccounts: async () => {
+        const snapshot = await firestore.getDocs(firestore.collection(db, "accounts"));
+        return snapshot.docs.map((document) => ({ id: document.id, ...document.data() }));
+      },
+      saveAllAccounts: async (accounts) => {
+        const batch = firestore.writeBatch(db);
+        accounts.forEach((account) => batch.set(accountRef(account.id), account.data, { merge: true }));
+        await batch.commit();
+      },
+      saveProfile: async (userId, profile) => firestore.setDoc(accountRef(userId), { profile }, { merge: true }),
+      isAdmin,
+    };
     window.MGM_SIGN_OUT = () => firebaseAuth.signOut(auth);
     const provider = new firebaseAuth.GoogleAuthProvider();
-    firebaseAuth.onAuthStateChanged(auth, (user) => {
-      window.dispatchEvent(new CustomEvent("mgm-auth-state", { detail: { user } }));
+    firebaseAuth.onAuthStateChanged(auth, async (user) => {
+      let admin = false;
+      try {
+        admin = await isAdmin(user);
+      } catch (error) {
+        console.error("Could not check administrator access", error);
+      }
+      window.dispatchEvent(new CustomEvent("mgm-auth-state", { detail: { user, admin } }));
     });
     window.addEventListener("mgm-demo-selected", () => {
       window.MGM_SIGN_OUT().catch((error) => console.error("Firebase sign-out failed", error));
     });
+    window.MGM_ADMIN_SIGN_IN = async (email, password) => {
+      const result = await firebaseAuth.signInWithEmailAndPassword(auth, email, password);
+      if (!(await isAdmin(result.user))) {
+        await firebaseAuth.signOut(auth);
+        throw new Error("This account is not on the administrator allowlist.");
+      }
+      return result.user;
+    };
     if (window.MGM_ACCOUNT_MODE === "demo") await firebaseAuth.signOut(auth);
     const redirectResult = await firebaseAuth.getRedirectResult(auth);
     if (redirectResult?.user) finishCustomerSignIn(redirectResult.user);

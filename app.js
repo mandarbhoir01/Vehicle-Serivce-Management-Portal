@@ -55,6 +55,9 @@ function loadAccountData(userId) {
 }
 
 let data = loadAccountData(currentUser.id);
+let cloudAccountId = null;
+let cloudAdmin = false;
+let cloudAccounts = [];
 function ensureDemoInvoice() {
   if (currentUser.id !== "aarav" || data.payments.some((payment) => payment.id === "INV-DEMO-UPI")) return;
   data.payments.unshift({ id: "INV-DEMO-UPI", owner: "aarav", requestId: "MD-1048", description: "Demo UPI checkout", amount: 1, date: new Date().toISOString().slice(0, 10), status: "Due", demoOnly: true });
@@ -108,12 +111,51 @@ const el = {
   form: document.querySelector("#request-form"), toast: document.querySelector("#toast"),
 };
 
-function save() { localStorage.setItem(`${PROFILE_STORAGE_PREFIX}:${currentUser.id}`, JSON.stringify(data)); }
-function setCustomerProfile(profile) {
+function save() {
+  try {
+    localStorage.setItem(`${PROFILE_STORAGE_PREFIX}:${currentUser.id}`, JSON.stringify(data));
+  } catch (error) {
+    console.warn("Local data save failed; continuing with cloud storage", error);
+  }
+  const cloud = window.MGM_CLOUD;
+  if (!cloud || !cloudAccountId) return;
+  const savePromise = cloudAdmin
+    ? cloud.saveAllAccounts(cloudAccounts.map((account) => {
+      const accountData = { vehicles: [], requests: [], payments: [], records: [] };
+      for (const key of Object.keys(accountData)) accountData[key] = data[key].filter((item) => item.owner === account.id);
+      return { id: account.id, data: { ...account, data: accountData } };
+    }))
+    : cloud.saveAccount(cloudAccountId, { data });
+  savePromise.catch((error) => {
+    console.error("Cloud data save failed", error);
+    toast("Cloud save failed. Check Firestore setup and try again.");
+  });
+}
+async function setCustomerProfile(profile, options = {}) {
   const nextId = String(profile.id || "customer");
   const changed = currentUser.id !== nextId;
   Object.assign(currentUser, { id: nextId, name: profile.name || "Customer", initials: profile.initials || "CU" });
-  if (changed) data = loadAccountData(nextId);
+  cloudAccountId = options.cloud ? nextId : null;
+  cloudAdmin = Boolean(options.admin);
+  if (changed || options.cloud) data = loadAccountData(nextId);
+  if (options.cloud && window.MGM_CLOUD) {
+    try {
+      if (options.admin) {
+        cloudAccounts = await window.MGM_CLOUD.loadAllAccounts();
+        data = emptyAccountData();
+        for (const account of cloudAccounts) {
+          for (const key of Object.keys(data)) data[key].push(...(account.data?.[key] || []));
+        }
+      } else {
+        const account = await window.MGM_CLOUD.loadAccount(nextId);
+        if (account?.data) data = account.data;
+        else await window.MGM_CLOUD.saveAccount(nextId, { data });
+      }
+    } catch (error) {
+      console.error("Cloud data load failed", error);
+      toast("Could not load cloud data. Check Firestore setup and access rules.");
+    }
+  }
   ensureDemoInvoice();
   render();
 }

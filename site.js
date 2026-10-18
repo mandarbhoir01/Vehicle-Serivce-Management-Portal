@@ -2,7 +2,7 @@ const publicSite = document.querySelector("#public-site");
 const portalApp = document.querySelector("#portal-app");
 const authBackdrop = document.querySelector("#auth-backdrop");
 const authForm = document.querySelector("#auth-form");
-const authName = document.querySelector("#auth-name");
+const authEmail = document.querySelector("#auth-name");
 const authPassword = document.querySelector("#auth-password");
 const authError = document.querySelector("#auth-error");
 const customerAuthPanel = document.querySelector("#customer-auth-panel");
@@ -27,8 +27,8 @@ const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)
 let authRole = "admin";
 let accountMode = "guest";
 let authenticatedUser = null;
+let customerProfileReady = false;
 let pendingBooking = null;
-const ADMIN_DEMO_PASSWORD = "MGMAdmin@2026";
 const CUSTOMER_PROFILE_PREFIX = "mgm-customer-profile-v1";
 let profileSetupUser = null;
 let editingCustomerProfile = false;
@@ -44,39 +44,47 @@ function initialsFor(name) {
   return name.split(/[\s@._+-]+/).filter(Boolean).slice(0, 2).map((part) => part[0].toUpperCase()).join("") || "CU";
 }
 
-function setAccountMode(mode, user = null) {
+async function setAccountMode(mode, user = null) {
   accountMode = mode;
   window.MGM_ACCOUNT_MODE = mode;
-  if (mode === "google") authenticatedUser = user;
+  if (mode !== "google") customerProfileReady = false;
+  if (mode === "google" || mode === "admin") authenticatedUser = user;
   if (mode === "guest" || mode === "demo") authenticatedUser = null;
 
   if (mode === "google") {
     const name = user.displayName || user.email || "Customer";
-    setCustomerProfile({ id: user.uid, name, initials: initialsFor(name) });
+    await setCustomerProfile({ id: user.uid, name, initials: initialsFor(name) }, { cloud: true });
   } else if (mode === "demo") {
-    setCustomerProfile({ id: "aarav", name: "Demo Customer", initials: "DC" });
+    await setCustomerProfile({ id: "aarav", name: "Demo Customer", initials: "DC" });
     window.dispatchEvent(new CustomEvent("mgm-demo-selected"));
   } else if (mode === "admin") {
-    Object.assign(currentUser, { id: "mandar-admin", name: "Mandar", initials: "MA" });
+    const name = user.displayName || user.email || "Administrator";
+    await setCustomerProfile({ id: user.uid, name, initials: initialsFor(name) }, { cloud: true, admin: true });
   } else {
-    setCustomerProfile({ id: "aarav", name: "Aarav Patel", initials: "AP" });
+    await setCustomerProfile({ id: "aarav", name: "Aarav Patel", initials: "AP" });
   }
 
-  const hasAccount = ["google", "demo", "admin"].includes(mode);
+  const hasAccount = mode === "demo" || mode === "admin" || (mode === "google" && customerProfileReady);
   document.querySelector("#site-login").classList.toggle("hidden", hasAccount);
   siteProfile.classList.toggle("hidden", !hasAccount);
   siteProfileName.textContent = mode === "demo" ? "Demo customer" : currentUser.name;
   siteProfileAvatar.textContent = currentUser.initials;
   siteProfile.setAttribute("aria-label", `${siteProfileName.textContent}: open garage`);
   profileMenuName.textContent = currentUser.name;
-  profileMenuEmail.textContent = mode === "google" ? user.email || "Google account" : mode === "demo" ? "Demo customer" : "Administrator";
+  profileMenuEmail.textContent = mode === "google" || mode === "admin" ? user.email || "Firebase account" : "Demo customer";
   profileMenu.classList.add("hidden");
   siteProfile.setAttribute("aria-expanded", "false");
 }
 
-function savedCustomerProfile(userId) {
+async function savedCustomerProfile(userId) {
+  if (window.MGM_CLOUD) {
+    const account = await window.MGM_CLOUD.loadAccount(userId);
+    if (account?.profile) return account.profile;
+  }
   try {
-    return JSON.parse(localStorage.getItem(`${CUSTOMER_PROFILE_PREFIX}:${userId}`) || "null");
+    const profile = JSON.parse(localStorage.getItem(`${CUSTOMER_PROFILE_PREFIX}:${userId}`) || "null");
+    if (profile && window.MGM_CLOUD) await window.MGM_CLOUD.saveProfile(userId, profile);
+    return profile;
   } catch {
     return null;
   }
@@ -99,28 +107,57 @@ function openCustomerProfile(user, savedProfile = null, editing = false) {
   profileNameInput.focus();
 }
 
-function handleGoogleUser(user) {
+async function editCustomerProfile(user) {
+  try {
+    openCustomerProfile(user, await savedCustomerProfile(user.uid), true);
+  } catch (error) {
+    console.error("Customer profile load failed", error);
+    profileActionError.textContent = "Could not load your profile. Check Firestore setup and try again.";
+    profileActionError.classList.remove("hidden");
+  }
+}
+
+async function handleGoogleUser(user) {
   if (editingCustomerProfile && profileSetupUser?.uid === user.uid && !profileBackdrop.classList.contains("hidden")) return;
   if (accountMode === "google" && authenticatedUser?.uid === user.uid && !profileSetupUser && profileBackdrop.classList.contains("hidden") && !pendingBooking) return;
-  setAccountMode("google", user);
-  const profile = savedCustomerProfile(user.uid);
+  await setAccountMode("google", user);
+  let profile;
+  try {
+    profile = await savedCustomerProfile(user.uid);
+  } catch (error) {
+    console.error("Customer profile load failed", error);
+    profileFormError.textContent = "Could not load your cloud profile. Check Firestore setup and try again.";
+    profileFormError.classList.remove("hidden");
+    return;
+  }
   if (!profile?.name || !profile?.phone) {
+    customerProfileReady = false;
+    siteProfile.classList.add("hidden");
     openCustomerProfile(user, profile);
     return;
   }
+  customerProfileReady = true;
   profileBackdrop.classList.add("hidden");
   profileSetupUser = null;
   editingCustomerProfile = false;
-  setCustomerProfile({ id: user.uid, name: profile.name, initials: initialsFor(profile.name) });
+  await setCustomerProfile({ id: user.uid, name: profile.name, initials: initialsFor(profile.name) }, { cloud: true });
   siteProfileName.textContent = currentUser.name;
   siteProfileAvatar.textContent = currentUser.initials;
   profileMenuName.textContent = currentUser.name;
+  document.querySelector("#site-login").classList.add("hidden");
+  siteProfile.classList.remove("hidden");
   siteProfile.setAttribute("aria-label", `${currentUser.name}: open account menu`);
   document.querySelector("#request-contact").value = profile.phone;
   const booking = pendingBooking;
   pendingBooking = null;
   if (booking) showPortal("customer", booking);
   else showPublicSite();
+}
+
+async function handleAdminUser(user) {
+  if (accountMode === "admin" && authenticatedUser?.uid === user.uid) return;
+  await setAccountMode("admin", user);
+  showPortal("admin");
 }
 
 function openLogin(nextRole = "customer", bookService = null) {
@@ -138,9 +175,16 @@ function setAuthRole(nextRole) {
   document.querySelector("#auth-title").textContent = isAdmin ? "ADMIN LOGIN" : "CUSTOMER LOGIN";
   authError.classList.add("hidden");
   if (isAdmin) {
-    authName.value = "";
+    document.querySelector("#auth-name-label").firstChild.textContent = "Admin email";
+    document.querySelector("#auth-form .auth-hint").textContent = "Use the administrator account provisioned in Firebase.";
+    authError.textContent = "Check your email and password, and confirm this account is authorized as an administrator.";
+    authEmail.type = "email";
+    authEmail.autocomplete = "username";
+    authEmail.placeholder = "name@example.com";
+    authEmail.value = "";
     authPassword.value = "";
-    authName.focus();
+    authPassword.autocomplete = "current-password";
+    authEmail.focus();
   } else {
     document.querySelector("#google-signin").focus();
   }
@@ -189,7 +233,7 @@ siteProfile.addEventListener("click", () => {
 document.querySelector("#manage-profile-button").addEventListener("click", () => {
   profileMenu.classList.add("hidden");
   siteProfile.setAttribute("aria-expanded", "false");
-  if (authenticatedUser) openCustomerProfile(authenticatedUser, savedCustomerProfile(authenticatedUser.uid), true);
+  if (authenticatedUser) editCustomerProfile(authenticatedUser);
 });
 document.querySelector("#open-customer-dashboard").addEventListener("click", () => {
   profileMenu.classList.add("hidden");
@@ -204,7 +248,7 @@ signOutButton.addEventListener("click", async () => {
       if (typeof window.MGM_SIGN_OUT !== "function") throw new Error("Firebase sign-out is not ready.");
       await window.MGM_SIGN_OUT();
     }
-    setAccountMode("guest");
+    await setAccountMode("guest");
     showPublicSite();
   } catch (error) {
     console.error("Customer sign-out failed", error);
@@ -220,7 +264,7 @@ profileCloseButton.addEventListener("click", () => {
   editingCustomerProfile = false;
 });
 document.querySelector("#top-avatar").addEventListener("click", () => {
-  if (authenticatedUser) openCustomerProfile(authenticatedUser, savedCustomerProfile(authenticatedUser.uid), true);
+  if (authenticatedUser) editCustomerProfile(authenticatedUser);
 });
 document.addEventListener("click", (event) => {
   if (event.target.closest(".site-account")) return;
@@ -242,19 +286,21 @@ window.addEventListener("mgm-role-switch-success", (event) => {
 });
 
 document.querySelectorAll(".auth-tab").forEach((tab) => tab.addEventListener("click", () => setAuthRole(tab.dataset.authRole)));
-customerEntry.addEventListener("click", () => {
-  setAccountMode("demo");
+customerEntry.addEventListener("click", async () => {
+  await setAccountMode("demo");
   const booking = pendingBooking;
   pendingBooking = null;
   showPortal("customer", booking);
 });
-customerProfileForm.addEventListener("submit", (event) => {
+customerProfileForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   if (!profileSetupUser) return;
   const profile = { name: profileNameInput.value.trim(), phone: profilePhoneInput.value.trim() };
   try {
     localStorage.setItem(`${CUSTOMER_PROFILE_PREFIX}:${profileSetupUser.uid}`, JSON.stringify(profile));
+    if (window.MGM_CLOUD) await window.MGM_CLOUD.saveProfile(profileSetupUser.uid, profile);
   } catch {
+    profileFormError.textContent = "Could not save your profile. Check Firestore setup and try again.";
     profileFormError.classList.remove("hidden");
     return;
   }
@@ -268,14 +314,23 @@ authBackdrop.addEventListener("click", (event) => {
   pendingBooking = null;
   authBackdrop.classList.add("hidden");
 });
-authForm.addEventListener("submit", (event) => {
+authForm.addEventListener("submit", async (event) => {
   event.preventDefault();
-  if (authRole !== "admin" || authName.value.trim().toLowerCase() !== "mandar" || authPassword.value !== ADMIN_DEMO_PASSWORD) {
+  if (authRole !== "admin") {
     authError.classList.remove("hidden");
     return;
   }
-  setAccountMode("admin");
-  showPortal("admin");
+  try {
+    if (typeof window.MGM_ADMIN_SIGN_IN !== "function") throw new Error("Firebase admin sign-in is not ready.");
+    const user = await window.MGM_ADMIN_SIGN_IN(authEmail.value.trim(), authPassword.value);
+    await handleAdminUser(user);
+    authBackdrop.classList.add("hidden");
+  } catch (error) {
+    authError.textContent = error.message.includes("allowlist")
+      ? error.message
+      : `Admin sign-in failed (${error.code || "unknown error"}). Check the email, password, and Firebase Authentication settings.`;
+    authError.classList.remove("hidden");
+  }
 });
 
 window.addEventListener("mgm-auth-success", (event) => {
@@ -284,8 +339,9 @@ window.addEventListener("mgm-auth-success", (event) => {
 
 window.addEventListener("mgm-auth-state", (event) => {
   if (event.detail.user) {
-    handleGoogleUser(event.detail.user);
-  } else if (accountMode === "google") {
+    if (event.detail.admin) handleAdminUser(event.detail.user);
+    else handleGoogleUser(event.detail.user);
+  } else if (accountMode === "google" || accountMode === "admin") {
     profileBackdrop.classList.add("hidden");
     profileSetupUser = null;
     editingCustomerProfile = false;

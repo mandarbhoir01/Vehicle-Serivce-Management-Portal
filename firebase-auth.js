@@ -70,7 +70,7 @@ async function initializeFirebaseAuth() {
       const result = await firebaseAuth.signInWithEmailAndPassword(auth, email, password);
       if (!(await isAdmin(result.user))) {
         await firebaseAuth.signOut(auth);
-        throw new Error("This account is not on the administrator allowlist.");
+        throw new Error(`This account is not on the administrator allowlist. Add Firestore document admins/${result.user.uid} in project ${firebaseConfig.projectId}.`);
       }
       return result.user;
     };

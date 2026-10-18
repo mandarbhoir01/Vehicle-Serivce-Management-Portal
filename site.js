@@ -176,7 +176,6 @@ function setAuthRole(nextRole) {
   authError.classList.add("hidden");
   if (isAdmin) {
     document.querySelector("#auth-name-label").firstChild.textContent = "Admin email";
-    document.querySelector("#auth-form .auth-hint").textContent = "Use the administrator account provisioned in Firebase.";
     authError.textContent = "Check your email and password, and confirm this account is authorized as an administrator.";
     authEmail.type = "email";
     authEmail.autocomplete = "username";

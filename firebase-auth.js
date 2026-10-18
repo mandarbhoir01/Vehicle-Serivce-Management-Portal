@@ -54,6 +54,14 @@ async function initializeFirebaseAuth() {
     };
     window.MGM_SIGN_OUT = () => firebaseAuth.signOut(auth);
     const provider = new firebaseAuth.GoogleAuthProvider();
+      window.MGM_ADMIN_GOOGLE_SIGN_IN = async () => {
+        const result = await firebaseAuth.signInWithPopup(auth, provider);
+        if (!(await isAdmin(result.user))) {
+          await firebaseAuth.signOut(auth);
+          throw new Error(`This Google account is not on the administrator allowlist. Add Firestore document admins/${result.user.uid} in project ${firebaseConfig.projectId}.`);
+        }
+        return result.user;
+      };
     firebaseAuth.onAuthStateChanged(auth, async (user) => {
       let admin = false;
       try {

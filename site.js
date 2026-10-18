@@ -24,9 +24,15 @@ const siteProfile = document.querySelector("#site-profile");
 const siteProfileName = document.querySelector("#site-profile-name");
 const siteProfileAvatar = document.querySelector("#site-profile-avatar");
 const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const adminGoogleButton = document.createElement("button");
+adminGoogleButton.type = "button";
+adminGoogleButton.className = "google-signin";
+adminGoogleButton.innerHTML = '<span class="google-mark">G</span>Continue with Google';
+authForm.append(adminGoogleButton);
 let authRole = "admin";
 let accountMode = "guest";
 let authenticatedUser = null;
+let adminGoogleSignInPending = false;
 let customerProfileReady = false;
 let pendingBooking = null;
 const CUSTOMER_PROFILE_PREFIX = "mgm-customer-profile-v1";
@@ -308,6 +314,26 @@ customerProfileForm.addEventListener("submit", async (event) => {
   handleGoogleUser(user);
 });
 document.querySelector("#close-auth").addEventListener("click", () => authBackdrop.classList.add("hidden"));
+adminGoogleButton.addEventListener("click", async () => {
+  authError.classList.add("hidden");
+  adminGoogleButton.disabled = true;
+  adminGoogleSignInPending = true;
+  try {
+    if (typeof window.MGM_ADMIN_GOOGLE_SIGN_IN !== "function") throw new Error("Google admin sign-in is not ready.");
+    const user = await window.MGM_ADMIN_GOOGLE_SIGN_IN();
+    await handleAdminUser(user);
+    adminGoogleSignInPending = false;
+    authBackdrop.classList.add("hidden");
+  } catch (error) {
+    if (!error.message.includes("allowlist")) adminGoogleSignInPending = false;
+    authError.textContent = error.message.includes("allowlist")
+      ? error.message
+      : `Google admin sign-in failed (${error.code || "unknown error"}). Check the Firebase account and try again.`;
+    authError.classList.remove("hidden");
+  } finally {
+    adminGoogleButton.disabled = false;
+  }
+});
 authBackdrop.addEventListener("click", (event) => {
   if (event.target !== authBackdrop) return;
   pendingBooking = null;
@@ -327,7 +353,9 @@ authForm.addEventListener("submit", async (event) => {
   } catch (error) {
     authError.textContent = error.message.includes("allowlist")
       ? error.message
-      : `Admin sign-in failed (${error.code || "unknown error"}). Check the email, password, and Firebase Authentication settings.`;
+      : error.code === "auth/invalid-credential"
+        ? "Email/password was rejected. This account may use Google sign-in; choose Continue with Google or verify the Firebase sign-in provider."
+        : `Admin sign-in failed (${error.code || "unknown error"}). Check the email, password, and Firebase Authentication settings.`;
     authError.classList.remove("hidden");
   }
 });
@@ -338,13 +366,20 @@ window.addEventListener("mgm-auth-success", (event) => {
 
 window.addEventListener("mgm-auth-state", (event) => {
   if (event.detail.user) {
-    if (event.detail.admin) handleAdminUser(event.detail.user);
-    else handleGoogleUser(event.detail.user);
-  } else if (accountMode === "google" || accountMode === "admin") {
-    profileBackdrop.classList.add("hidden");
-    profileSetupUser = null;
-    editingCustomerProfile = false;
-    setAccountMode("guest");
+    if (event.detail.admin) {
+      adminGoogleSignInPending = false;
+      handleAdminUser(event.detail.user);
+    } else if (!adminGoogleSignInPending && !(authRole === "admin" && !authBackdrop.classList.contains("hidden"))) {
+      handleGoogleUser(event.detail.user);
+    }
+  } else {
+    adminGoogleSignInPending = false;
+    if (accountMode === "google" || accountMode === "admin") {
+      profileBackdrop.classList.add("hidden");
+      profileSetupUser = null;
+      editingCustomerProfile = false;
+      setAccountMode("guest");
+    }
   }
 });
 

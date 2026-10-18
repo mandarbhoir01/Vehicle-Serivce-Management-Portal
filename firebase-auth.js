@@ -14,10 +14,8 @@ function showAuthError(error) {
 
 async function initializeFirebaseAuth() {
   if (!firebaseConfig?.apiKey || !firebaseConfig?.authDomain || !firebaseConfig?.projectId || !firebaseConfig?.appId) {
-    authStatus.textContent = "Add Firebase web config and enable Google sign-in. Demo access remains available below.";
-    googleButton.addEventListener("click", () => {
-      authStatus.textContent = "Google sign-in needs Firebase config. Follow the Hosting setup in README.md.";
-    });
+    authStatus.textContent = "";
+    googleButton.disabled = true;
     return;
   }
 
@@ -82,7 +80,7 @@ async function initializeFirebaseAuth() {
 
     googleButton.addEventListener("click", async () => {
       googleButton.disabled = true;
-      authStatus.textContent = "Opening Google sign-in...";
+      authStatus.textContent = "";
       try {
         const result = await firebaseAuth.signInWithPopup(auth, provider);
         finishCustomerSignIn(result.user);
@@ -106,7 +104,7 @@ async function initializeFirebaseAuth() {
       }
     });
     googleButton.disabled = false;
-    authStatus.textContent = "Google sign-in is ready.";
+    authStatus.textContent = "";
   } catch (error) {
     googleButton.disabled = true;
     showAuthError(error);
